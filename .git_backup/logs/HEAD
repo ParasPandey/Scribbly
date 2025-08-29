@@ -1,0 +1,5 @@
+0000000000000000000000000000000000000000 91ad8a8cf55e9899edc7d6727b6d844431bc906f Paras Pandey <paras.pandey@nagarro.com> 1755273546 +0530	commit (initial): Initial commit from Create Next App
+91ad8a8cf55e9899edc7d6727b6d844431bc906f e91338037a247f8763715547af98dbd88fbaf183 Paras Pandey <paras.pandey@nagarro.com> 1756454955 +0530	commit: Initial commit: frontend + server
+e91338037a247f8763715547af98dbd88fbaf183 e91338037a247f8763715547af98dbd88fbaf183 Paras Pandey <paras.pandey@nagarro.com> 1756454964 +0530	checkout: moving from main to develop
+e91338037a247f8763715547af98dbd88fbaf183 ad326c455f4b4f9fba9e08a87679c107e8fc0fbc Paras Pandey <paras.pandey@nagarro.com> 1756455235 +0530	commit: Add .gitignore and cleanup large files
+ad326c455f4b4f9fba9e08a87679c107e8fc0fbc 1e4aa8e8c08acf633978ef2c3d995b6f2fec8b76 Paras Pandey <paras.pandey@nagarro.com> 1756455391 +0530	commit: added git ignore
