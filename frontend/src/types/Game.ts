@@ -3,8 +3,8 @@ import { JSX } from "react";
 export interface GameSettingOption {
   icon: JSX.Element;
   label: string;
-  options: string[];
-  default: string;
+  options: number[];
+  default: number;
   disabled: boolean;
 }
 
@@ -22,10 +22,10 @@ export interface Notification {
 }
 
 export interface InGameSettings {
-  players: string;
-  drawTime: string;
-  rounds: string;
-  wordCount: string;
-  hints: string;
+  players: number;
+  drawTime: number;
+  rounds: number;
+  wordCount: number;
+  hints: number;
   customWords: string[];
 }

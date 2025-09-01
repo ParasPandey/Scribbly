@@ -8,7 +8,7 @@ import { ToastContainer } from "react-toastify";
 
 const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
-  weight: ["400", "700"], // include weights you plan to use
+  weight: ["400", "700"],
   variable: "--font-nata-sans",
   display: "swap",
 });

@@ -12,23 +12,38 @@ interface GameStore {
   chats: Chat[];
   canvasPaths: CanvasPath[];
   isMyTurn: boolean;
+  currentRoundNumber: number;
+  currRound: {
+    wordsList: string[];
+    selectedWord: string;
+    isRoundStarted: boolean;
+    timmer: number;
+    message?: { text: string; avatar: string };
+  };
 }
 
 const initialState: GameStore = {
   roomId: "",
   gameState: GameState.USER_REGISTERING, // Initial game state
   gameSettings: {
-    players: "2",
-    drawTime: "80",
-    rounds: "3",
-    wordCount: "3",
-    hints: "2",
+    players: 2,
+    drawTime: 10,
+    rounds: 3,
+    wordCount: 3,
+    hints: 2,
     customWords: [],
   },
   playersJoined: [],
   chats: [],
   canvasPaths: [],
   isMyTurn: false,
+  currentRoundNumber: 1,
+  currRound: {
+    wordsList: [],
+    selectedWord: "",
+    isRoundStarted: false,
+    timmer: 0,
+  },
 };
 
 const gameSlice = createSlice({
@@ -44,19 +59,19 @@ const gameSlice = createSlice({
     updateGameSettings: (state, action: PayloadAction<InGameSettings>) => {
       state.gameSettings = action.payload;
     },
-    setNumberOfPlayers: (state, action: PayloadAction<string>) => {
+    setNumberOfPlayers: (state, action: PayloadAction<number>) => {
       state.gameSettings.players = action.payload;
     },
-    setDrawTime: (state, action: PayloadAction<string>) => {
+    setDrawTime: (state, action: PayloadAction<number>) => {
       state.gameSettings.drawTime = action.payload;
     },
-    setRounds: (state, action: PayloadAction<string>) => {
+    setRounds: (state, action: PayloadAction<number>) => {
       state.gameSettings.rounds = action.payload;
     },
-    setWordCount: (state, action: PayloadAction<string>) => {
+    setWordCount: (state, action: PayloadAction<number>) => {
       state.gameSettings.wordCount = action.payload;
     },
-    setHints: (state, action: PayloadAction<string>) => {
+    setHints: (state, action: PayloadAction<number>) => {
       state.gameSettings.hints = action.payload;
     },
     // Additional reducers for custom words
@@ -91,7 +106,52 @@ const gameSlice = createSlice({
       state.canvasPaths = [];
     },
     setIsMyTurn: (state, action: PayloadAction<boolean>) => {
+      // check for player list and update internal property also
       state.isMyTurn = action.payload;
+    },
+    updateWordsList: (state, action: PayloadAction<string[]>) => {
+      state.currRound.wordsList = action.payload;
+    },
+    updateSelectedWord: (state, action: PayloadAction<string>) => {
+      state.currRound.selectedWord = action.payload;
+      state.currRound.isRoundStarted = true;
+    },
+
+    startRound: (
+      state,
+      action: PayloadAction<{
+        selectedWord: string;
+        timmer: number;
+      }>
+    ) => {
+      state.currRound.selectedWord = action.payload.selectedWord;
+      state.currRound.isRoundStarted = true;
+      state.currRound.timmer = action.payload.timmer;
+    },
+    resetRound: (state) => {
+      state.currRound.wordsList = [];
+      state.currRound.selectedWord = "";
+      state.currRound.isRoundStarted = false;
+      state.currRound.message = undefined;
+    },
+
+    updateTimmer: (state, action: PayloadAction<number>) => {
+      state.currRound.timmer = action.payload;
+    },
+    updateCurrRoundNumber: (state, action: PayloadAction<number>) => {
+      state.currentRoundNumber = action.payload;
+    },
+    updateMessage: (
+      state,
+      action: PayloadAction<{
+        text: string;
+        avatar: string;
+      }>
+    ) => {
+      state.currRound.message = {
+        text: action.payload.text,
+        avatar: action.payload.avatar,
+      };
     },
   },
 });
@@ -116,5 +176,12 @@ export const {
   addCanvaPath,
   clearCanvaPaths,
   setIsMyTurn,
+  updateWordsList,
+  updateSelectedWord,
+  startRound,
+  resetRound,
+  updateTimmer,
+  updateCurrRoundNumber,
+  updateMessage,
 } = gameSlice.actions;
 export default gameSlice.reducer;

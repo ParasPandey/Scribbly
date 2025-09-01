@@ -1,3 +1,10 @@
+// Avatar & Player
+export interface AvatarType {
+  id: number;
+  src: string;
+  alt: string;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -5,14 +12,10 @@ export interface Player {
   isHost: boolean;
   rank: number;
   score: number;
+  isPlayerTurn: boolean;
 }
 
-export interface AvatarType {
-  id: number;
-  src: string;
-  alt: string;
-}
-
+// Chat
 export interface ChatMessage {
   sender: string;
   message: string;
@@ -20,30 +23,18 @@ export interface ChatMessage {
   messageType: string;
 }
 
+// Settings
 export interface InGameSettings {
-  players: string;
-  drawTime: string;
-  rounds: string;
-  wordCount: string;
-  hints: string;
+  players: number;
+  drawTime: number; // seconds
+  rounds: number;
+  wordCount: number; // how many options shown to drawer
+  hints: number;
   customWords: string[];
 }
-export interface Room {
-  owner: Player;
-  players: Record<string, Player>;
-  chat: ChatMessage[];
-  gameSetting: InGameSettings;
-  isGameStarted: boolean;
-  canvas: CanvasPath[];
-  turnOrder: string[];
-  currentTurnIndex: number;
-}
 
-// types/canvas.ts
-export type Point = {
-  x: number;
-  y: number;
-};
+// Canvas
+export type Point = { x: number; y: number };
 
 export type CanvasPath = {
   strokeColor: string;
@@ -51,3 +42,32 @@ export type CanvasPath = {
   drawMode: boolean;
   paths: Point[];
 };
+
+// Turn (ephemeral)
+export interface TurnState {
+  wordOptions: string[]; // options visible to current drawer
+  selectedWord?: string; // set after user picks
+  startedAt?: number; // ms epoch, set after selection
+  endsAt?: number; // ms epoch, set after selection
+}
+
+// Game (per running match)
+export interface GameState {
+  canvas: CanvasPath[];
+  turnOrder: string[];
+  currentTurnIndex: number;
+  roundNumber: number;
+  wordsCollection: string[]; // pool for this game
+  currentTurn?: TurnState;
+}
+
+// Room (lobby + game container)
+export interface Room {
+  id: string;
+  owner: Player;
+  players: Record<string, Player>;
+  chat: ChatMessage[];
+  gameSetting: InGameSettings;
+  isGameStarted: boolean;
+  game?: GameState; // present only when a game is running
+}

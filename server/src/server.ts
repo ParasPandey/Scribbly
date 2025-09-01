@@ -5,52 +5,64 @@ import cors from "cors";
 import { CanvasPath, InGameSettings, Player, Room } from "./types";
 import { v4 as uuidv4 } from "uuid";
 import { shuffle } from "lodash";
+import { words } from "./data/words";
+import { getRandomWords } from "./utils";
+import { startTurn } from "./helper/startTurn";
+import { changeTurn } from "./helper/changeTurn";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Basic REST route
-app.get("/", (_req, res) => {
-  res.send("Game server is running 🚀");
-});
+app.get("/", (_req, res) => res.send("Game server is running 🚀"));
 
 const server = http.createServer(app);
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
-// --- Store active rooms & players ---
-const rooms: Record<string, Room> = {};
-const socketToPlayer: Record<string, { roomId: string; playerId: string }> = {};
-const playerToSocket: Record<string, string> = {}; // playerId → socketId
+// In-memory state
+export const rooms: Record<string, Room> = {};
+export const socketToPlayer: Record<
+  string,
+  { roomId: string; playerId: string }
+> = {};
+export const playerToSocket: Record<string, string> = {};
+export const roomTimers: Record<string, NodeJS.Timeout> = {};
 
-// Socket.IO connection
+// ------------- helpers -------------
+export const getCurrentPlayerId = (room: Room) =>
+  room.game ? room.game.turnOrder[room.game.currentTurnIndex] : undefined;
+
+// ------------- sockets -------------
 io.on("connection", (socket) => {
-  // Create private room
+  // create room
   socket.on("create-private-room", (player: Player) => {
-    const roomId = uuidv4(); // ✅ Use uuid instead of socket.id
+    const roomId = uuidv4();
     socket.join(roomId);
-    console.log(`🔌 Room Created: ${roomId}`);
-    rooms[roomId] = {
-      owner: player,
-      players: { [player.id]: player },
-      chat: [],
-      gameSetting: {
-        players: "8",
-        drawTime: "80",
-        rounds: "3",
-        wordCount: "3",
-        hints: "2",
-        customWords: [],
-      },
-      isGameStarted: false,
-      canvas: [],
-      turnOrder: [],
-      currentTurnIndex: 0,
+
+    const defaultSettings: InGameSettings = {
+      players: 8,
+      drawTime: 10,
+      rounds: 3,
+      wordCount: 3,
+      hints: 2,
+      customWords: [],
     };
+
+    rooms[roomId] = {
+      id: roomId,
+      owner: player,
+      players: { [player.id]: { ...player, isPlayerTurn: false } },
+      chat: [],
+      gameSetting: defaultSettings,
+      isGameStarted: false,
+      // game: undefined
+    };
+
     socketToPlayer[socket.id] = { roomId, playerId: player.id };
     playerToSocket[player.id] = socket.id;
+
     io.to(roomId).emit("room-created", {
       success: true,
       roomId,
@@ -64,34 +76,30 @@ io.on("connection", (socket) => {
       messageType: "room-creation",
       timestamp: Date.now(),
     };
-
-    io.to(roomId).emit("chat-message", chatMessage);
-
     rooms[roomId].chat.push(chatMessage);
+    io.to(roomId).emit("chat-message", chatMessage);
 
     io.to(roomId).emit("room-players", {
       players: Object.values(rooms[roomId].players),
     });
-
     io.to(roomId).emit("game-settings", {
       gameSetting: rooms[roomId].gameSetting,
     });
   });
 
-  // Join room
+  // join room
   socket.on(
     "join-room",
     ({ roomId, player }: { roomId: string; player: Player }) => {
-      if (!rooms[roomId]) {
-        socket.emit("room-error", { message: "Room not found" });
-        return;
-      }
-      console.log(`👤 Player ${player.name} joining room ${roomId}`);
-      socket.join(roomId);
-      rooms[roomId].players[player.id] = player;
+      const room = rooms[roomId];
+      if (!room)
+        return socket.emit("room-error", { message: "Room not found" });
 
+      socket.join(roomId);
+      room.players[player.id] = { ...player, isPlayerTurn: false };
       socketToPlayer[socket.id] = { roomId, playerId: player.id };
       playerToSocket[player.id] = socket.id;
+
       io.to(roomId).emit("player-joined", {
         success: true,
         roomId,
@@ -105,62 +113,49 @@ io.on("connection", (socket) => {
         messageType: "room-join",
         timestamp: Date.now(),
       };
-      rooms[roomId].chat.push(chatMessage);
-
+      room.chat.push(chatMessage);
       io.to(roomId).emit("chat-message", chatMessage);
 
       io.to(roomId).emit("room-players", {
-        players: Object.values(rooms[roomId].players),
+        players: Object.values(room.players),
       });
-      const isGameStarted = rooms[roomId].isGameStarted;
-      if (isGameStarted) {
-        io.to(roomId).emit("game:start");
-      } else {
-        io.to(roomId).emit("game-settings", {
-          gameSetting: rooms[roomId].gameSetting,
-        });
-      }
-      // Send existing canvas to newcomer
-      const currentCanvas = rooms[roomId].canvas;
-      if (currentCanvas && currentCanvas.length) {
-        socket.emit("canvas:paths", currentCanvas);
+
+      if (room.isGameStarted) io.to(roomId).emit("game:start");
+      else
+        io.to(roomId).emit("game-settings", { gameSetting: room.gameSetting });
+
+      // send existing canvas if a game is running
+      if (room.game && room.game.canvas.length) {
+        socket.emit("canvas:paths", room.game.canvas);
       }
     }
   );
 
-  // update game settings
+  // update settings
   socket.on(
     "update-game-settings",
     (roomId: string, newSettings: Partial<InGameSettings>) => {
       const room = rooms[roomId];
       if (!room) return;
 
-      // only owner can update
-      if (
-        room.owner.id !==
-          room.players[socketToPlayer[socket.id]?.playerId]?.id &&
-        room.isGameStarted
-      )
-        return;
+      // only owner before game starts
+      const isOwner = room.owner.id === socketToPlayer[socket.id]?.playerId;
+      if (!isOwner || room.isGameStarted) return;
 
       room.gameSetting = { ...room.gameSetting, ...newSettings };
-      // broadcast update to all players
-      io.to(roomId).emit("game-settings", {
-        gameSetting: room.gameSetting,
-      });
+      io.to(roomId).emit("game-settings", { gameSetting: room.gameSetting });
     }
   );
 
-  // chat send
+  // chat
   socket.on(
     "chat-send",
     (chat: { message: string; sender: string; messageType: string }) => {
-      const playerId = socketToPlayer[socket.id]?.playerId;
-      const roomId = socketToPlayer[socket.id]?.roomId;
-      const player = playerId ? rooms[roomId]?.players[playerId] : null;
-      if (!player || !roomId) return;
+      const { roomId, playerId } = socketToPlayer[socket.id] || {};
+      if (!roomId || !playerId) return;
       const room = rooms[roomId];
       if (!room) return;
+
       const chatMessage = {
         message: chat.message,
         sender: chat.sender,
@@ -172,115 +167,146 @@ io.on("connection", (socket) => {
     }
   );
 
-  // game events
+  // start game
   socket.on("game:start", (roomId: string) => {
     const room = rooms[roomId];
     if (!room) return;
 
-    // Shuffle playerIds for turn order
-    const playerIds = Object.keys(room.players); // [playerId1, playerId2, ...]
-    room.turnOrder = shuffle(playerIds);
-    room.currentTurnIndex = 0;
+    const playerIds = Object.keys(room.players);
+    const order = shuffle(playerIds);
 
-    // Determine current player
-    const currentPlayerId = room.turnOrder[room.currentTurnIndex];
-    const currentSocketId = playerToSocket[currentPlayerId];
+    const minWordCount = order.length * room.gameSetting.rounds;
+    const wordsCollection = getRandomWords(words, minWordCount + 10);
 
-    // user turns
-    if (currentSocketId) {
-      io.to(currentSocketId).emit("user:user-turn", true);
-    }
-
-    // Grant read-only to others
-    playerIds.forEach((pid) => {
-      if (pid !== currentPlayerId) {
-        const sid = playerToSocket[pid];
-        if (sid) {
-          io.to(sid).emit("user:user-turn", false);
-        }
-      }
-    });
-
-    // Broadcast turn order (so UI can show whose turn it is)
     room.isGameStarted = true;
+    room.game = {
+      canvas: [],
+      turnOrder: order,
+      currentTurnIndex: 0,
+      roundNumber: 1,
+      wordsCollection,
+      currentTurn: {
+        wordOptions: [],
+      },
+    };
 
-    io.to(roomId).emit("game:turn-order", room.turnOrder);
     io.to(roomId).emit("game:start");
+    startTurn(roomId);
+
+    // io.to(roomId).emit("room-players", {
+    //   players: Object.values(room.players),
+    // });
   });
 
-  // --- Canvas events ---
-  // // ✅ Handle drawing
+  // word selected → start timer here
+  socket.on(
+    "turn:word-selected",
+    ({ roomId, word }: { roomId: string; word: string }) => {
+      const room = rooms[roomId];
+      if (!room || !room.game || !room.game.currentTurn) return;
+
+      const currentPlayerId = getCurrentPlayerId(room);
+      const currentSocketId = currentPlayerId
+        ? playerToSocket[currentPlayerId]
+        : undefined;
+
+      if (socket.id !== currentSocketId) {
+        console.log(`❌ Blocked word selection by ${socket.id}`);
+        return;
+      }
+      // remove from pool so it doesn't repeat
+      room.game.wordsCollection = room.game.wordsCollection.filter(
+        (w) => w !== word
+      );
+
+      // set turn timing
+      const durationSec = room.gameSetting.drawTime;
+      room.game.currentTurn.selectedWord = word;
+
+      io.to(roomId).emit("game:round-started", {
+        currentSelectedWord: word,
+        duration: durationSec,
+      });
+
+      // server-side safety timer
+      if (roomTimers[roomId]) clearTimeout(roomTimers[roomId]);
+      roomTimers[roomId] = setTimeout(() => {
+        io.to(roomId).emit("turn:timeout");
+        changeTurn(roomId);
+      }, durationSec * 1000);
+    }
+  );
+
+  // manual turn change (or client timeout event)
+  socket.on("turn:change", (roomId: string) => changeTurn(roomId));
+  socket.on("turn:timeout", ({ roomId }: { roomId: string }) =>
+    changeTurn(roomId)
+  );
+
+  // canvas: only current player can draw
   socket.on("canvas:paths", (roomId: string, paths: CanvasPath[]) => {
     const room = rooms[roomId];
-    if (!room) return;
+    if (!room || !room.game) return;
 
-    const currentPlayerId = room.turnOrder[room.currentTurnIndex];
-    const currentSocketId = playerToSocket[currentPlayerId];
+    const currentPlayerId = getCurrentPlayerId(room);
+    const currentSocketId = currentPlayerId
+      ? playerToSocket[currentPlayerId]
+      : undefined;
 
-    // Only current player can update canvas
     if (socket.id === currentSocketId) {
-      room.canvas = paths; // keep latest state
+      room.game.canvas = paths;
       socket.to(roomId).emit("canvas:paths", paths);
     } else {
       console.log(`❌ Blocked drawing attempt from ${socket.id}`);
     }
   });
 
-  // ✅ Handle clear
   socket.on("canvas:clear", (roomId: string) => {
     const room = rooms[roomId];
-    if (!room) return;
+    if (!room || !room.game) return;
 
-    const currentPlayerId = room.turnOrder[room.currentTurnIndex];
-    const currentSocketId = playerToSocket[currentPlayerId];
+    const currentPlayerId = getCurrentPlayerId(room);
+    const currentSocketId = currentPlayerId
+      ? playerToSocket[currentPlayerId]
+      : undefined;
+
     if (socket.id === currentSocketId) {
-      room.canvas = [];
-      console.log("canvas:clear from", socket.id);
+      room.game.canvas = [];
       io.to(roomId).emit("canvas:clear");
-    } else {
-      console.log(`❌ Blocked clear attempt from ${socket.id}`);
     }
   });
 
-  // ✅ Handle undo
   socket.on("canvas:undo", (roomId: string, paths: CanvasPath[]) => {
     const room = rooms[roomId];
-    if (!room) return;
+    if (!room || !room.game) return;
 
-    const currentPlayerId = room.turnOrder[room.currentTurnIndex];
-    const currentSocketId = playerToSocket[currentPlayerId];
+    const currentPlayerId = getCurrentPlayerId(room);
+    const currentSocketId = currentPlayerId
+      ? playerToSocket[currentPlayerId]
+      : undefined;
 
     if (socket.id === currentSocketId) {
-      room.canvas = paths;
-      console.log("canvas:undo from", socket.id);
+      room.game.canvas = paths;
       socket.to(roomId).emit("canvas:paths", paths);
-    } else {
-      console.log(`❌ Blocked undo attempt from ${socket.id}`);
     }
   });
 
-  // Handle disconnect
+  // disconnect
   socket.on("disconnect", () => {
-    const playerId = socketToPlayer[socket.id]?.playerId;
-    const roomId = socketToPlayer[socket.id]?.roomId;
-    const player = playerId ? rooms[roomId]?.players[playerId] : null;
+    const info = socketToPlayer[socket.id];
+    if (!info) return;
 
-    // check if player and roomId are valid
-    if (!player || !roomId) return;
+    const { roomId, playerId } = info;
     const room = rooms[roomId];
     if (!room) return;
 
-    console.log(
-      `❌ User disconnected: ${socketToPlayer[socket.id]?.playerId}: ${
-        player.name
-      }`
-    );
-
+    const player = room.players[playerId];
     delete room.players[playerId];
     delete socketToPlayer[socket.id];
     delete playerToSocket[playerId];
+
     io.to(roomId).emit("chat-message", {
-      message: `${player.name} left the room`,
+      message: `${player?.name ?? "A player"} left the room`,
       sender: "system",
       messageType: "room-leave",
       timestamp: Date.now(),
@@ -290,8 +316,9 @@ io.on("connection", (socket) => {
       players: Object.values(room.players),
     });
 
-    // ✅ If room is empty, delete it
+    // if empty, clean up
     if (Object.keys(room.players).length === 0) {
+      if (roomTimers[roomId]) clearTimeout(roomTimers[roomId]);
       delete rooms[roomId];
       console.log(`🗑️ Room ${roomId} deleted (no players left)`);
     }
@@ -299,6 +326,4 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => {
-  console.log(`✅ Server listening on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`✅ Server listening on port ${PORT}`));

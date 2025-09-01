@@ -10,11 +10,7 @@ export function PlayerPanel() {
         <PlayerCard
           key={player.id}
           isSelf={player.id === selfId}
-          rank={player.rank}
-          name={player.name}
-          score={player.score}
-          avatar={player.avatar}
-          isAdmin={player.isHost}
+          player={player}
           even={index % 2 === 0}
         />
       ))}

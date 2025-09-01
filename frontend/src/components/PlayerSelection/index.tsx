@@ -8,8 +8,8 @@ import Image from "next/image";
 export function PlayerSelection() {
   const debounce = useDebounce();
   const dispatch = useAppDispatch();
-  const debouncedSetName = debounce((value: string) => {
-    dispatch(setName(value));
+  const debouncedSetName = debounce((value: unknown) => {
+    dispatch(setName(value as string));
   }, 200);
   return (
     <div className="flex flex-col gap-2 p-5 items-center">

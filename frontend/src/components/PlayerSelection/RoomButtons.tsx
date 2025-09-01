@@ -32,6 +32,7 @@ const RoomButtons = () => {
       isHost: false,
       rank: 1,
       score: 0,
+      isPlayerTurn: false,
     };
     socket.emit("join-room", { roomId, player });
   };
@@ -49,6 +50,7 @@ const RoomButtons = () => {
       isHost: true,
       rank: 1,
       score: 0,
+      isPlayerTurn: false,
     };
     socket.emit("create-private-room", player);
   };
