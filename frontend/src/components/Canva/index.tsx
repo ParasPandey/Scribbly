@@ -7,9 +7,9 @@ import { CanvaMode } from "../../../enums";
 
 export function Canva() {
   const socket = useSocket();
-  const { roomId, canvasPaths, isMyTurn } = useAppSelector(
-    (state) => state.game
-  );
+  const { roomId, isMyTurn } = useAppSelector((state) => state.game);
+
+  const { canvasPaths } = useAppSelector((state) => state.canvas);
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
   const [mode, setMode] = useState<CanvaMode>(CanvaMode.DRAW);
   const [strokeWidth, setStrokeWidth] = useState(5);

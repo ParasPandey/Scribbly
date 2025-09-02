@@ -1,12 +1,13 @@
 import { useAppSelector } from "@/store/hooks";
 import PlayerCard from "./PlayerCard";
+import { Player } from "@/types/Player";
 
 export function PlayerPanel() {
-  const playersJoined = useAppSelector((state) => state.game.playersJoined);
+  const { players } = useAppSelector((state) => state.players);
   const selfId = useAppSelector((state) => state.user.uuid);
   return (
     <div className="player-panel flex flex-col">
-      {playersJoined.map((player, index) => (
+      {Object.values(players).map((player: Player, index: number) => (
         <PlayerCard
           key={player.id}
           isSelf={player.id === selfId}

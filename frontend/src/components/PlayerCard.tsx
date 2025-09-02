@@ -1,4 +1,3 @@
-import { useAppSelector } from "@/store/hooks";
 import { Player } from "@/types/Player";
 import Image from "next/image";
 

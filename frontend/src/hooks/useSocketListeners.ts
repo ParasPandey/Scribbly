@@ -2,31 +2,32 @@
 import { useEffect } from "react";
 import { useAppDispatch } from "@/store/hooks";
 import {
-  updatePlayers,
   updateGameState,
   updateGameSettings,
   updateRoomId,
-  addChat,
-  setCanvaPaths,
-  addCanvaPath,
-  clearCanvaPaths,
   setIsMyTurn,
-  updateWordsList,
-  updateSelectedWord,
-  resetRound,
-  startRound,
-  updateTimmer,
   updateCurrRoundNumber,
-  updateMessage,
 } from "@/store/gameSlice";
 import { useRouter } from "next/navigation";
 import { Player } from "@/types/Player";
 import { GameState } from "@/enums";
 import { useSocket } from "@/context/socketContext";
-import { Chat, InGameSettings } from "@/types/Game";
+import { InGameSettings } from "@/types/Game";
 import { setHost } from "@/store/userSlice";
 import { toast } from "react-toastify";
 import { CanvasPath } from "react-sketch-canvas";
+import { addCanvasPath, clearCanvas, setCanvasPaths } from "@/store/canvaSlice";
+import { Chat } from "@/types/Chat";
+import { addChat } from "@/store/chatSlice";
+import {
+  resetRound,
+  setRoundMessage,
+  setTimmer,
+  setWordsList,
+  startRound,
+} from "@/store/roundSlice";
+import { RoundMessage } from "@/types/Round";
+import { setPlayers } from "@/store/playerSlice";
 
 export const useSocketListeners = () => {
   const dispatch = useAppDispatch();
@@ -57,7 +58,6 @@ export const useSocketListeners = () => {
     }: {
       success: boolean;
       roomId: string;
-      player: Player;
     }) => {
       if (success) {
         dispatch(updateGameState(GameState.ROOM_CREATION));
@@ -66,8 +66,12 @@ export const useSocketListeners = () => {
       }
     };
 
-    const handleRoomPlayerUpdate = ({ players }: { players: Player[] }) => {
-      dispatch(updatePlayers(players));
+    const handleRoomPlayerUpdate = ({
+      players,
+    }: {
+      players: Record<string, Player>;
+    }) => {
+      dispatch(setPlayers(players));
     };
 
     const handleRoomChatUpdate = (notification: Chat) => {
@@ -92,15 +96,15 @@ export const useSocketListeners = () => {
     };
 
     const handleSetCanvaPaths = (paths: CanvasPath[]) => {
-      dispatch(setCanvaPaths(paths));
+      dispatch(setCanvasPaths(paths));
     };
 
     const handleAddCanvaPaths = (paths: CanvasPath) => {
-      dispatch(addCanvaPath(paths));
+      dispatch(addCanvasPath(paths));
     };
 
     const handleClearCanvaPaths = () => {
-      dispatch(clearCanvaPaths());
+      dispatch(clearCanvas());
     };
     const handleGameUserTurn = ({
       isMyTurn,
@@ -113,16 +117,15 @@ export const useSocketListeners = () => {
       words: string[];
       duration: number;
       currentRound: number;
-      message: { text: string; avatar: string } | null;
+      message: RoundMessage | undefined;
     }) => {
-      console.log("currentRound", currentRound);
       dispatch(setIsMyTurn(isMyTurn));
-      dispatch(updateWordsList(words));
-      dispatch(updateTimmer(duration));
+      dispatch(setWordsList(words));
+      dispatch(setTimmer(duration));
       dispatch(updateCurrRoundNumber(currentRound));
       console.log(message);
       if (!isMyTurn && message) {
-        dispatch(updateMessage(message));
+        dispatch(setRoundMessage(message));
       }
     };
 
@@ -141,7 +144,7 @@ export const useSocketListeners = () => {
     const handleTurnTimeout = () => {
       dispatch(resetRound());
       dispatch(setIsMyTurn(false));
-      dispatch(clearCanvaPaths());
+      dispatch(clearCanvas());
     };
 
     socket.on("room-created", handleRoomCreated);

@@ -7,14 +7,6 @@ export interface GameSettingOption {
   default: number;
   disabled: boolean;
 }
-
-export interface Chat {
-  message: string;
-  sender: string;
-  messageType: string;
-  timestamp?: string;
-}
-
 export interface Notification {
   message: string;
   messageType: string;

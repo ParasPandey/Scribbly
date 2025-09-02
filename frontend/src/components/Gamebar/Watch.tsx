@@ -3,9 +3,7 @@ import AccessAlarmIcon from "@mui/icons-material/AccessAlarm";
 import { useEffect, useRef, useState } from "react";
 
 export function Watch() {
-  const { isRoundStarted, timmer } = useAppSelector(
-    (state) => state.game.currRound
-  );
+  const { isRoundStarted, timmer } = useAppSelector((state) => state.round);
 
   const drawTime = useAppSelector((state) => state.game.gameSettings.drawTime);
   const [timeLeft, setTimeLeft] = useState(timmer);

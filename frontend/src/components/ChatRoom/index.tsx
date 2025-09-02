@@ -1,16 +1,16 @@
 import { useAppSelector } from "@/store/hooks";
-import { Chat } from "@/types/Game";
 import clsx from "clsx";
 import { SearchField } from "./SerchField";
+import { Chat } from "@/types/Chat";
 
 export const ChatRoom = () => {
-  const { chats } = useAppSelector((state) => state.game);
+  const { chats } = useAppSelector((state) => state.chat);
 
   return (
     <div className="chat-room bg-white rounded-sm shadow-sm overflow-hidden pt-1 pb-1">
       <div className="chat-messages overflow-y-auto h-[90%] mb-4">
         {/* Chat messages will be displayed here */}
-        {chats?.map((chat: Chat, index) => (
+        {chats?.map((chat: Chat, index: number) => (
           <div
             key={index}
             className={clsx(

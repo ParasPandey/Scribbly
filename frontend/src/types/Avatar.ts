@@ -1,5 +1,5 @@
 export interface AvatarType {
-  id: string;
+  id: number;
   src: string;
   alt: string;
 }

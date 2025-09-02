@@ -12,9 +12,9 @@ import WordChossing from "@/components/WordChossing";
 import { WordGuessingHelper } from "@/components/WordGuessingHelper";
 
 export default function Game() {
-  const { gameState, isMyTurn, currRound } = useAppSelector(
-    (state) => state.game
-  );
+  const { gameState, isMyTurn } = useAppSelector((state) => state.game);
+
+  const round = useAppSelector((state) => state.round);
 
   if (gameState === GameState.USER_REGISTERING) {
     return <PlayerSelection />;
@@ -25,12 +25,12 @@ export default function Game() {
       return <GameSettings />;
     }
 
-    if (isMyTurn && !currRound.isRoundStarted) {
+    if (isMyTurn && !round.isRoundStarted) {
       return <WordChossing />;
     }
 
-    if (!isMyTurn && !currRound.isRoundStarted && currRound.message) {
-      return <WordGuessingHelper message={currRound.message} />;
+    if (!isMyTurn && !round.isRoundStarted && round.message) {
+      return <WordGuessingHelper message={round.message} />;
     }
 
     return <Canva />;

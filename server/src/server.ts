@@ -80,7 +80,7 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("chat-message", chatMessage);
 
     io.to(roomId).emit("room-players", {
-      players: Object.values(rooms[roomId].players),
+      players: rooms[roomId].players,
     });
     io.to(roomId).emit("game-settings", {
       gameSetting: rooms[roomId].gameSetting,
@@ -117,7 +117,7 @@ io.on("connection", (socket) => {
       io.to(roomId).emit("chat-message", chatMessage);
 
       io.to(roomId).emit("room-players", {
-        players: Object.values(room.players),
+        players: room.players,
       });
 
       if (room.isGameStarted) io.to(roomId).emit("game:start");
@@ -194,7 +194,7 @@ io.on("connection", (socket) => {
     startTurn(roomId);
 
     // io.to(roomId).emit("room-players", {
-    //   players: Object.values(room.players),
+    //   players: room.players
     // });
   });
 
@@ -313,7 +313,7 @@ io.on("connection", (socket) => {
     });
 
     io.to(roomId).emit("room-players", {
-      players: Object.values(room.players),
+      players: room.players,
     });
 
     // if empty, clean up

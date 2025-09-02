@@ -2,13 +2,12 @@
 
 import React, { useEffect } from "react";
 import { useSocketListeners } from "@/hooks/useSocketListeners";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => {
   useSocketListeners();
 
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     // Handle reload / direct entry

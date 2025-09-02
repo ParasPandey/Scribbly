@@ -57,7 +57,7 @@ export function startTurn(roomId: string) {
 
     // only for now will update this
     io.to(roomId).emit("room-players", {
-      players: Object.values(room.players),
+      players: room.players,
     });
   }
 }

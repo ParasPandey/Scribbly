@@ -1,8 +1,11 @@
 import { useAppSelector } from "@/store/hooks";
 
 export function ShowSelectedWord() {
-  const { currRound, isMyTurn } = useAppSelector((state) => state.game);
-  const { isRoundStarted, selectedWord } = currRound;
+  const { isMyTurn } = useAppSelector((state) => state.game);
+
+  const { isRoundStarted, selectedWord } = useAppSelector(
+    (state) => state.round
+  );
   const showSelectedText = isMyTurn && isRoundStarted;
   return (
     <>

@@ -21,33 +21,34 @@ export default function SettingOption({
   const { roomId } = useSelector((state: RootState) => state.game);
   const socket = useSocket();
   function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    const value = Number(event.target.value);
     switch (setting.label) {
       case "Players":
-        dispatch(setNumberOfPlayers(event.target.value));
+        dispatch(setNumberOfPlayers(value));
         socket.emit("update-game-settings", roomId, {
-          players: event.target.value,
+          players: value,
         });
         break;
       case "Draw Time":
-        dispatch(setDrawTime(event.target.value));
+        dispatch(setDrawTime(value));
         socket.emit("update-game-settings", roomId, {
-          drawTime: event.target.value,
+          drawTime: value,
         });
         break;
       case "Rounds":
-        dispatch(setRounds(event.target.value));
+        dispatch(setRounds(value));
         socket.emit("update-game-settings", roomId, {
-          rounds: event.target.value,
+          rounds: value,
         });
         break;
       case "Word Count":
-        dispatch(setWordCount(event.target.value));
+        dispatch(setWordCount(value));
         socket.emit("update-game-settings", roomId, {
-          wordCount: event.target.value,
+          wordCount: value,
         });
         break;
       case "Hints":
-        dispatch(setHints(event.target.value));
+        dispatch(setHints(value));
 
         socket.emit("update-game-settings", roomId, {
           hints: event.target.value,
