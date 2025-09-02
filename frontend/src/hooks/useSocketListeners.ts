@@ -60,6 +60,7 @@ export const useSocketListeners = () => {
       roomId: string;
     }) => {
       if (success) {
+        console.log("room joined");
         dispatch(updateGameState(GameState.ROOM_CREATION));
         dispatch(updateRoomId(roomId));
         router.push(`/${roomId}`);

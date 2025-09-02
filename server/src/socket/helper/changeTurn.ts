@@ -1,4 +1,4 @@
-import { rooms, roomTimers } from "../server";
+import { rooms, roomTimers } from "../../store";
 import { startTurn } from "./startTurn";
 
 export function changeTurn(roomId: string) {

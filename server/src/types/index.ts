@@ -1,3 +1,5 @@
+import { DefaultEventsMap, Socket } from "socket.io";
+
 // Avatar & Player
 export interface AvatarType {
   id: number;
@@ -71,3 +73,6 @@ export interface Room {
   isGameStarted: boolean;
   game?: GameState; // present only when a game is running
 }
+
+export interface SocketType
+  extends Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any> {}

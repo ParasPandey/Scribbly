@@ -1,7 +1,6 @@
-import { DefaultEventsMap, Server } from "socket.io";
-import { Room } from "../types";
-import { getRandomWords } from "../utils";
-import { io, playerToSocket, rooms, roomTimers } from "../server";
+import { io } from "../../server";
+import { playerToSocket, rooms, roomTimers } from "../../store";
+import { getRandomWords } from "../../utils";
 
 export function startTurn(roomId: string) {
   const room = rooms[roomId];

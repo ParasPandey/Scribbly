@@ -13,11 +13,15 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { useSocket } from "@/context/socketContext";
 import { useState } from "react";
+import { useAppDispatch } from "@/store/hooks";
+import { Chat } from "@/types/Chat";
+import { addChat } from "@/store/chatSlice";
 
 export function GameSettings() {
   const { roomId } = useSelector((state: RootState) => state.game);
   const { isHost } = useSelector((state: RootState) => state.user);
   const socket = useSocket();
+  const dispatch = useAppDispatch();
   const [customWords, setCustomWords] = useState<string>("");
   const debounce = useDebounce();
   const debouncedCustomWords = debounce((value: unknown) => {
@@ -85,11 +89,18 @@ export function GameSettings() {
   const copyToClipboard = () => {
     const url = `${window.location.origin}/${roomId}`;
     navigator.clipboard.writeText(url);
-    socket.emit("chat-send", {
+    // socket.emit("chat-send", {
+    //   message: `Copied room link to clipboard!`,
+    //   sender: "system",
+    //   messageType: "info",
+    // });
+    // instead of sending to everyone, just push to redux for self only,
+    const chat: Chat = {
       message: `Copied room link to clipboard!`,
       sender: "system",
       messageType: "info",
-    });
+    };
+    dispatch(addChat(chat));
   };
 
   return (
