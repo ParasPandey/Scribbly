@@ -17,7 +17,7 @@ export function DisconnectEvent(socket: SocketType) {
     delete socketToPlayer[socket.id];
     delete playerToSocket[playerId];
 
-    io.to(roomId).emit("chat-message", {
+    io.to(roomId).emit("chat:message", {
       message: `${player?.name ?? "A player"} left the room`,
       sender: "system",
       messageType: "room-leave",

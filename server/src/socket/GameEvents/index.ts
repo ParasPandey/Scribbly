@@ -6,6 +6,7 @@ import { words } from "../../data/words";
 import { io } from "../../server";
 import { changeTurn } from "../helper/changeTurn";
 import { startTurn } from "../helper/startTurn";
+import { announceRound, handleWordSelected } from "./GameEventHandlers";
 
 export function GameEvents(socket: SocketType) {
   // Update Game settings
@@ -37,6 +38,12 @@ export function GameEvents(socket: SocketType) {
     const wordsCollection = getRandomWords(words, minWordCount + 10);
 
     room.isGameStarted = true;
+
+    const score = new Map<string, number>();
+    order.forEach((playerId) => {
+      score.set(playerId, 0); // initialize everyone's score to 0
+    });
+
     room.game = {
       canvas: [],
       turnOrder: order,
@@ -46,10 +53,12 @@ export function GameEvents(socket: SocketType) {
       currentTurn: {
         wordOptions: [],
       },
+      score: score,
     };
 
     io.to(roomId).emit("game:start");
-    startTurn(roomId);
+    // ⏳ Announce Round 1 → then start first turn
+    announceRound(roomId, 1, () => startTurn(roomId));
 
     // io.to(roomId).emit("room-players", {
     //   players: room.players
@@ -60,38 +69,8 @@ export function GameEvents(socket: SocketType) {
   socket.on(
     "turn:word-selected",
     ({ roomId, word }: { roomId: string; word: string }) => {
-      const room = rooms[roomId];
-      if (!room || !room.game || !room.game.currentTurn) return;
-
-      const currentPlayerId = getCurrentPlayerId(room);
-      const currentSocketId = currentPlayerId
-        ? playerToSocket[currentPlayerId]
-        : undefined;
-
-      if (socket.id !== currentSocketId) {
-        console.log(`❌ Blocked word selection by ${socket.id}`);
-        return;
-      }
-      // remove from pool so it doesn't repeat
-      room.game.wordsCollection = room.game.wordsCollection.filter(
-        (w) => w !== word
-      );
-
-      // set turn timing
-      const durationSec = room.gameSetting.drawTime;
-      room.game.currentTurn.selectedWord = word;
-
-      io.to(roomId).emit("game:round-started", {
-        currentSelectedWord: word,
-        duration: durationSec,
-      });
-
-      // server-side safety timer
-      if (roomTimers[roomId]) clearTimeout(roomTimers[roomId]);
-      roomTimers[roomId] = setTimeout(() => {
-        io.to(roomId).emit("turn:timeout");
-        changeTurn(roomId);
-      }, durationSec * 1000);
+      console.log(`⚡ manual-picked word: ${word}`);
+      handleWordSelected(roomId, socket.id, word);
     }
   );
 

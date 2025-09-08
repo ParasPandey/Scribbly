@@ -30,6 +30,18 @@ const playersSlice = createSlice({
         state.players[id] = { ...state.players[id], ...changes };
       }
     },
+    updatePlayerScores(
+      state,
+      action: PayloadAction<{ playerId: string; score: number; rank: number }[]>
+    ) {
+      action.payload.forEach(({ playerId, score, rank }) => {
+        if (state.players[playerId]) {
+          state.players[playerId].score = score;
+          state.players[playerId].rank = rank;
+        }
+      });
+    },
+
     removePlayer(state, action: PayloadAction<string>) {
       delete state.players[action.payload];
     },
@@ -39,6 +51,12 @@ const playersSlice = createSlice({
   },
 });
 
-export const { setPlayers, addPlayer, updatePlayer, removePlayer, setMyTurn } =
-  playersSlice.actions;
+export const {
+  setPlayers,
+  addPlayer,
+  updatePlayer,
+  removePlayer,
+  setMyTurn,
+  updatePlayerScores,
+} = playersSlice.actions;
 export default playersSlice.reducer;

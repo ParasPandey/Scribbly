@@ -3,7 +3,9 @@ import AccessAlarmIcon from "@mui/icons-material/AccessAlarm";
 import { useEffect, useRef, useState } from "react";
 
 export function Watch() {
-  const { isRoundStarted, timmer } = useAppSelector((state) => state.round);
+  const { timmer } = useAppSelector((state) => state.round);
+
+  const { isGameStarted } = useAppSelector((state) => state.game);
 
   const drawTime = useAppSelector((state) => state.game.gameSettings.drawTime);
   const [timeLeft, setTimeLeft] = useState(timmer);
@@ -11,7 +13,7 @@ export function Watch() {
 
   useEffect(() => {
     // If round starts, initialize timer
-    if (isRoundStarted) {
+    if (isGameStarted) {
       setTimeLeft(timmer); // reset countdown
 
       timerRef.current = setInterval(() => {
@@ -32,13 +34,13 @@ export function Watch() {
         timerRef.current = null;
       }
     };
-  }, [isRoundStarted, timmer]);
+  }, [isGameStarted, timmer]);
 
   return (
     <div className="clock flex items-center gap-1">
       <AccessAlarmIcon sx={{ height: 50, width: 50 }} />
       <span className="text-xl font-bold">
-        {isRoundStarted ? timeLeft : drawTime} sec
+        {!isGameStarted ? drawTime : timeLeft}sec
       </span>
     </div>
   );

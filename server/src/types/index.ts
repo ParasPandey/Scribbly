@@ -49,8 +49,14 @@ export type CanvasPath = {
 export interface TurnState {
   wordOptions: string[]; // options visible to current drawer
   selectedWord?: string; // set after user picks
-  startedAt?: number; // ms epoch, set after selection
-  endsAt?: number; // ms epoch, set after selection
+  guessedBy?: Map<string, number>;
+  currentPlayerId?: string;
+  startAt?: number;
+}
+
+export interface GussedBy {
+  playerId: string;
+  guessedAt: number;
 }
 
 // Game (per running match)
@@ -61,6 +67,7 @@ export interface GameState {
   roundNumber: number;
   wordsCollection: string[]; // pool for this game
   currentTurn?: TurnState;
+  score: Map<string, number>;
 }
 
 // Room (lobby + game container)
@@ -76,3 +83,21 @@ export interface Room {
 
 export interface SocketType
   extends Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any> {}
+
+export enum MessageTypes {
+  SYSTEM = "system",
+  DEFAULT = "message",
+  SELF = "self",
+  CORRECTLY_GUESSED = "correctly-guessed",
+  PARTIALLY_GUESSED = "partially-guessed",
+  START_DRAWING = "start-drawing",
+}
+
+export interface Scores {
+  playerId: string;
+  playerName: string;
+  roundScore: number;
+  roundRank: number;
+  totalScore: number;
+  totalRank: number;
+}

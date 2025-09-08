@@ -18,3 +18,30 @@ body {
     url("/eraser-cursor.png") 4 16,
     cell;
 }
+
+/* Custom white rounded scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgb(163, 161, 161) transparent; /* Firefox */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 3px; /* fixed width, won't change */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgb(163, 161, 161);
+  border-radius: 9999px;
+  border: 2px solid transparent; /* keeps size consistent */
+  background-clip: padding-box; /* ensures roundness */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background-color: rgb(163, 161, 161); /* stay same color */
+  border: 2px solid transparent; /* prevents "fatter" look */
+}

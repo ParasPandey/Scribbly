@@ -43,14 +43,16 @@ export const createRoom = (
     timestamp: Date.now(),
   };
   rooms[roomId].chat.push(chatMessage);
-  io.to(roomId).emit("chat-message", chatMessage);
 
   io.to(roomId).emit("room-players", {
     players: rooms[roomId].players,
   });
+
   io.to(roomId).emit("game-settings", {
     gameSetting: rooms[roomId].gameSetting,
   });
+
+  io.to(roomId).emit("chat:message", chatMessage);
 };
 
 export const joinRoom = (
@@ -69,7 +71,10 @@ export const joinRoom = (
     host: false,
     time: Date.now(),
   });
-  console.log("yes");
+
+  io.to(roomId).emit("room-players", {
+    players: room.players,
+  });
   const chatMessage = {
     message: `${player.name} joined the room`,
     sender: "system",
@@ -77,11 +82,8 @@ export const joinRoom = (
     timestamp: Date.now(),
   };
   room.chat.push(chatMessage);
-  io.to(roomId).emit("chat-message", chatMessage);
 
-  io.to(roomId).emit("room-players", {
-    players: room.players,
-  });
+  io.to(roomId).emit("chat:message", chatMessage);
 
   if (room.isGameStarted) io.to(roomId).emit("game:start");
   else

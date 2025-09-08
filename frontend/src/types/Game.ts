@@ -21,3 +21,11 @@ export interface InGameSettings {
   hints: number;
   customWords: string[];
 }
+export interface Scores {
+  playerId: string;
+  playerName: string;
+  roundScore: number;
+  roundRank: number;
+  totalScore: number;
+  totalRank: number;
+}

@@ -1,26 +1,41 @@
 import { rooms, roomTimers } from "../../store";
+import { announceRound } from "../GameEvents/GameEventHandlers";
 import { startTurn } from "./startTurn";
 
 export function changeTurn(roomId: string) {
   const room = rooms[roomId];
   if (!room || !room.game) return;
 
+  console.log("change turn");
   // stop timer if any
   if (roomTimers[roomId]) {
     clearTimeout(roomTimers[roomId]);
     delete roomTimers[roomId];
   }
 
-  // progress turn index
-  room.game.currentTurnIndex =
+  let currentTurnIndex =
     (room.game.currentTurnIndex + 1) % room.game.turnOrder.length;
 
-  // optionally track rounds
-  if (room.game.currentTurnIndex === 0) room.game.roundNumber++;
+  // progress turn index
+  room.game.currentTurnIndex = currentTurnIndex;
+
+  // new round check
+  let isNewRound = false;
+  if (room.game.currentTurnIndex === 0) {
+    room.game.roundNumber++;
+    isNewRound = true;
+  }
 
   // clear current turn
-  room.game.currentTurn = { wordOptions: [] };
+  room.game.currentTurn = {
+    wordOptions: [],
+    guessedBy: new Map<string, number>(),
+  };
 
-  // start next turn (again: selection first, timer later)
-  startTurn(roomId);
+  if (isNewRound) {
+    // ⏳ show round number before starting turn
+    announceRound(roomId, room.game.roundNumber, () => startTurn(roomId));
+  } else {
+    startTurn(roomId);
+  }
 }

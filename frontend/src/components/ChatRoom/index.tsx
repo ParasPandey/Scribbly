@@ -14,12 +14,16 @@ export const ChatRoom = () => {
           <div
             key={index}
             className={clsx(
-              "chat-notification flex align-center p-1 pl-2 font-bold text-sm",
+              "chat-notification flex align-center p-1 pl-2 font-bold text-sm text-black",
               (index + 1) % 2 === 0 ? "bg-gray-100" : "bg-white",
-              chat.messageType === "room-creation" && " text-[#ffa843]",
-              chat.messageType === "room-join" && " text-[#57cd27]",
-              chat.messageType === "room-leave" && " text-[#ce4e0c]",
-              chat.messageType === "info" && " text-[#e2cb00]"
+              chat.messageType === "room-creation" && " !text-[#ffa844]",
+              chat.messageType === "room-join" && " !text-[#57cd27]",
+              chat.messageType === "room-leave" && " !text-[#d36835]",
+              chat.messageType === "info" && " !text-[#e2cb00]",
+              chat.messageType === "self" && " !text-[#8ab554]",
+              chat.messageType === "start-drawing" && " !text-[#6895d6]",
+              chat.messageType === "correctly-guessed" &&
+                "!bg-[#e7ffdf] !text-[#57cd27]"
             )}
           >
             {chat.sender === "system" ? (
@@ -27,9 +31,7 @@ export const ChatRoom = () => {
             ) : (
               <>
                 <strong> {chat.sender}:</strong>
-                <span className="text-black font-normal pl-1">
-                  {chat.message}
-                </span>
+                <span className=" font-normal pl-1">{chat.message}</span>
               </>
             )}
           </div>

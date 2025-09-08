@@ -1,18 +1,19 @@
 // hooks/useSocketListeners.ts
 import { useEffect } from "react";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   updateGameState,
   updateGameSettings,
   updateRoomId,
   setIsMyTurn,
   updateCurrRoundNumber,
+  updateGameStarted,
 } from "@/store/gameSlice";
 import { useRouter } from "next/navigation";
 import { Player } from "@/types/Player";
 import { GameState } from "@/enums";
 import { useSocket } from "@/context/socketContext";
-import { InGameSettings } from "@/types/Game";
+import { InGameSettings, Scores } from "@/types/Game";
 import { setHost } from "@/store/userSlice";
 import { toast } from "react-toastify";
 import { CanvasPath } from "react-sketch-canvas";
@@ -22,17 +23,21 @@ import { addChat } from "@/store/chatSlice";
 import {
   resetRound,
   setRoundMessage,
+  setShouldDisplayScores,
   setTimmer,
   setWordsList,
   startRound,
+  updateRoundScores,
 } from "@/store/roundSlice";
-import { RoundMessage } from "@/types/Round";
-import { setPlayers } from "@/store/playerSlice";
+import { RoundMessage, RoundScores } from "@/types/Round";
+import { setPlayers, updatePlayerScores } from "@/store/playerSlice";
+import { getNameFromPlayerId } from "@/utils/getNameFromPlayerId";
 
 export const useSocketListeners = () => {
   const dispatch = useAppDispatch();
   const socket = useSocket();
   const router = useRouter();
+  const { players } = useAppSelector((state) => state.players);
 
   useEffect(() => {
     const handleRoomCreated = ({
@@ -60,7 +65,6 @@ export const useSocketListeners = () => {
       roomId: string;
     }) => {
       if (success) {
-        console.log("room joined");
         dispatch(updateGameState(GameState.ROOM_CREATION));
         dispatch(updateRoomId(roomId));
         router.push(`/${roomId}`);
@@ -76,7 +80,14 @@ export const useSocketListeners = () => {
     };
 
     const handleRoomChatUpdate = (notification: Chat) => {
-      dispatch(addChat(notification));
+      if (notification.sender === "system") {
+        dispatch(addChat(notification));
+      } else {
+        const name = getNameFromPlayerId(players, notification.sender);
+        if (name) {
+          dispatch(addChat({ ...notification, sender: name }));
+        }
+      }
     };
     const handleGameSettingsUpdate = ({
       gameSetting,
@@ -94,6 +105,7 @@ export const useSocketListeners = () => {
 
     const handleRoomStart = () => {
       dispatch(updateGameState(GameState.GAME_START));
+      dispatch(updateGameStarted(true));
     };
 
     const handleSetCanvaPaths = (paths: CanvasPath[]) => {
@@ -107,7 +119,7 @@ export const useSocketListeners = () => {
     const handleClearCanvaPaths = () => {
       dispatch(clearCanvas());
     };
-    const handleGameUserTurn = ({
+    const handleStartingTurn = ({
       isMyTurn,
       words,
       duration,
@@ -120,11 +132,11 @@ export const useSocketListeners = () => {
       currentRound: number;
       message: RoundMessage | undefined;
     }) => {
+      //set new states
       dispatch(setIsMyTurn(isMyTurn));
       dispatch(setWordsList(words));
       dispatch(setTimmer(duration));
       dispatch(updateCurrRoundNumber(currentRound));
-      console.log(message);
       if (!isMyTurn && message) {
         dispatch(setRoundMessage(message));
       }
@@ -148,34 +160,84 @@ export const useSocketListeners = () => {
       dispatch(clearCanvas());
     };
 
+    const handleRoundChange = ({
+      message,
+      duration,
+    }: {
+      message: string;
+      duration: number;
+    }) => {
+      dispatch(setTimmer(duration));
+      dispatch(setRoundMessage({ text: message, avatar: "" }));
+    };
+
+    const handleGameScore = ({
+      scores,
+      message,
+    }: {
+      scores: Scores[];
+      message: string;
+    }) => {
+      const roundScores: RoundScores[] = scores
+        .map((score) => {
+          return {
+            name: score.playerName,
+            score: score.roundScore,
+            rank: score.roundRank,
+          };
+        })
+        .sort((a, b) => a.rank - b.rank);
+
+      const totalScores = scores.map((score) => {
+        return {
+          playerId: score.playerId,
+          score: score.totalScore,
+          rank: score.totalRank,
+        };
+      });
+
+      // 1. Update game score slice (if you still need it separately)
+      dispatch(updateRoundScores(roundScores));
+      dispatch(setRoundMessage({ text: message }));
+      dispatch(setTimmer(0));
+      dispatch(setShouldDisplayScores(true));
+
+      // 2. Update player slice (merge score + rank into players)
+      dispatch(updatePlayerScores(totalScores));
+    };
+
     socket.on("room-created", handleRoomCreated);
     socket.on("player-joined", handleRoomJoined);
     socket.on("room-players", handleRoomPlayerUpdate);
-    socket.on("chat-message", handleRoomChatUpdate);
+    socket.on("chat:message", handleRoomChatUpdate);
     socket.on("game-settings", handleGameSettingsUpdate);
     socket.on("room-error", handleRoomError);
     socket.on("game:start", handleRoomStart);
     socket.on("canvas:paths", handleSetCanvaPaths);
     socket.on("canvas:addPath", handleAddCanvaPaths);
     socket.on("canvas:clear", handleClearCanvaPaths);
-    socket.on("turn:change", handleGameUserTurn);
+    socket.on("turn:word-selection", handleStartingTurn);
     socket.on("game:round-started", handleRoundStarted);
+    socket.on("game:round-change", handleRoundChange);
     socket.on("turn:timeout", handleTurnTimeout);
+    socket.on("game:score", handleGameScore);
 
     return () => {
       socket.off("room-created", handleRoomCreated);
       socket.off("player-joined", handleRoomJoined);
       socket.off("room-players", handleRoomPlayerUpdate);
-      socket.off("chat-message", handleRoomChatUpdate);
+      socket.off("chat:message", handleRoomChatUpdate);
       socket.off("game-settings", handleGameSettingsUpdate);
       socket.off("room-error", handleRoomError);
       socket.off("game:start", handleRoomStart);
       socket.off("canvas:paths", handleSetCanvaPaths);
       socket.off("canvas:addPath", handleAddCanvaPaths);
       socket.off("canvas:clear", handleClearCanvaPaths);
-      socket.off("turn:change", handleGameUserTurn);
+      socket.off("turn:word-selection", handleStartingTurn);
       socket.off("game:round-started", handleRoundStarted);
+      socket.off("game:round-change", handleRoundChange);
       socket.off("turn:timeout", handleTurnTimeout);
+      socket.off("game:score", handleGameScore);
     };
-  }, [dispatch, router]);
+  }, [dispatch, router, players]);
 };

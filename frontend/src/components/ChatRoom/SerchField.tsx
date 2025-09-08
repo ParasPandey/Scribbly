@@ -5,15 +5,17 @@ import { useAppSelector } from "@/store/hooks";
 export function SearchField() {
   const [input, setInput] = useState("");
 
+  const { roomId } = useAppSelector((state) => state.game);
+
   const socket = useSocket();
   const user = useAppSelector((state) => state.user);
   const onSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && input) {
       if (!input.trim()) return;
-      socket.emit("chat-send", {
+      socket.emit("chat:send", {
         message: input.trim(),
-        sender: user.name, // You can replace this with actual user info if available
-        messageType: "message",
+        roomId: roomId,
+        senderId: user.uuid,
       });
       setInput("");
     }

@@ -9,11 +9,11 @@ import { GameState } from "@/enums";
 import { PlayerSelection } from "@/components/PlayerSelection";
 import { Canva } from "@/components/Canva";
 import WordChossing from "@/components/WordChossing";
-import { WordGuessingHelper } from "@/components/WordGuessingHelper";
+import { GameMessageHelper } from "@/components/GameMessageHelper";
+import { EachTurnScore } from "@/components/EachTurnScore";
 
 export default function Game() {
   const { gameState, isMyTurn } = useAppSelector((state) => state.game);
-
   const round = useAppSelector((state) => state.round);
 
   if (gameState === GameState.USER_REGISTERING) {
@@ -21,16 +21,39 @@ export default function Game() {
   }
 
   function renderContent() {
+    // show game setting
     if (gameState === GameState.ROOM_CREATION) {
       return <GameSettings />;
     }
-
+    // show new round start message
+    if (round.isRoundChange && round.message) {
+      return <GameMessageHelper isShowAvatar={false} message={round.message} />;
+    }
+    // show words to choose for current turn player
     if (isMyTurn && !round.isRoundStarted) {
       return <WordChossing />;
     }
+    // show player is chossing word ot other players
+    if (
+      !isMyTurn &&
+      !round.isRoundStarted &&
+      round.message &&
+      !round.shouldDisplayScores
+    ) {
+      return <GameMessageHelper isShowAvatar={true} message={round.message} />;
+    }
 
-    if (!isMyTurn && !round.isRoundStarted && round.message) {
-      return <WordGuessingHelper message={round.message} />;
+    // show current turn rejult after each turn
+    if (round.shouldDisplayScores && round.roundScores) {
+      return (
+        <>
+          <EachTurnScore
+            scores={round.roundScores}
+            word={round.selectedWord}
+            message={round.message?.text}
+          />
+        </>
+      );
     }
 
     return <Canva />;

@@ -3,7 +3,7 @@ import { useAppSelector } from "@/store/hooks";
 export function ShowSelectedWord() {
   const { isMyTurn } = useAppSelector((state) => state.game);
 
-  const { isRoundStarted, selectedWord } = useAppSelector(
+  const { isRoundStarted, selectedWord, shouldDisplayScores } = useAppSelector(
     (state) => state.round
   );
   const showSelectedText = isMyTurn && isRoundStarted;
@@ -17,7 +17,7 @@ export function ShowSelectedWord() {
       )}
 
       {/* Round Started but not my turn */}
-      {isRoundStarted && !isMyTurn && (
+      {!isMyTurn && isRoundStarted && !shouldDisplayScores && (
         <div className="flex justify-center uppercase gap-2 h-full p-2">
           {[...selectedWord].map((ch, i) =>
             ch === " " ? (
@@ -34,7 +34,7 @@ export function ShowSelectedWord() {
         </div>
       )}
 
-      {showSelectedText && (
+      {(showSelectedText || shouldDisplayScores) && (
         <div className="flex justify-center uppercase font-bold text-2xl tracking-[5px]">
           {selectedWord}
         </div>

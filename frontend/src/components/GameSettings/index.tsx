@@ -89,11 +89,6 @@ export function GameSettings() {
   const copyToClipboard = () => {
     const url = `${window.location.origin}/${roomId}`;
     navigator.clipboard.writeText(url);
-    // socket.emit("chat-send", {
-    //   message: `Copied room link to clipboard!`,
-    //   sender: "system",
-    //   messageType: "info",
-    // });
     // instead of sending to everyone, just push to redux for self only,
     const chat: Chat = {
       message: `Copied room link to clipboard!`,
@@ -104,7 +99,7 @@ export function GameSettings() {
   };
 
   return (
-    <div className="game-settings bg-[#35394a] p-2 rounded-sm shadow-sm flex flex-col gap-2">
+    <div className="game-settings bg-[#35394a] p-2 rounded-sm shadow-sm flex flex-col gap-2 w-full h-full">
       {settings.map((setting: GameSettingOption) => (
         <SettingOption key={setting.label} setting={setting} />
       ))}

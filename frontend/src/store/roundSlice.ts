@@ -1,4 +1,4 @@
-import { RoundMessage, RoundState } from "@/types/Round";
+import { RoundMessage, RoundScores, RoundState } from "@/types/Round";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 const initialState: RoundState = {
@@ -7,6 +7,8 @@ const initialState: RoundState = {
   isRoundStarted: false,
   timmer: 0,
   message: undefined,
+  isRoundChange: false,
+  shouldDisplayScores: false,
 };
 
 const roundSlice = createSlice({
@@ -43,6 +45,17 @@ const roundSlice = createSlice({
       state.timmer = action.payload.timmer;
     },
     resetRound: () => initialState,
+    setRoundChange: (state, action: PayloadAction<{ message: string }>) => {
+      state.isRoundChange = true;
+      state.message = { text: action.payload.message };
+    },
+
+    updateRoundScores(state, action: PayloadAction<RoundScores[]>) {
+      state.roundScores = action.payload;
+    },
+    setShouldDisplayScores: (state, action: PayloadAction<boolean>) => {
+      state.shouldDisplayScores = action.payload;
+    },
   },
 });
 
@@ -54,6 +67,8 @@ export const {
   setRoundMessage,
   resetRound,
   startRound,
+  updateRoundScores,
+  setShouldDisplayScores,
 } = roundSlice.actions;
 
 export default roundSlice.reducer;

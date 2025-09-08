@@ -1,5 +1,5 @@
 import { GameState } from "@/enums";
-import { InGameSettings } from "@/types/Game";
+import { InGameSettings, Scores } from "@/types/Game";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface GameStore {
@@ -8,6 +8,7 @@ interface GameStore {
   gameSettings: InGameSettings;
   isMyTurn: boolean;
   currentRoundNumber: number;
+  isGameStarted: boolean;
 }
 
 const initialState: GameStore = {
@@ -23,6 +24,7 @@ const initialState: GameStore = {
   },
   isMyTurn: false,
   currentRoundNumber: 1,
+  isGameStarted: false,
 };
 
 const gameSlice = createSlice({
@@ -69,6 +71,9 @@ const gameSlice = createSlice({
     updateCurrRoundNumber: (state, action: PayloadAction<number>) => {
       state.currentRoundNumber = action.payload;
     },
+    updateGameStarted: (state, action: PayloadAction<boolean>) => {
+      state.isGameStarted = action.payload;
+    },
   },
 });
 
@@ -86,5 +91,6 @@ export const {
   resetGameSettings,
   setIsMyTurn,
   updateCurrRoundNumber,
+  updateGameStarted,
 } = gameSlice.actions;
 export default gameSlice.reducer;
