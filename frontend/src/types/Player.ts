@@ -9,3 +9,4 @@ export interface Player {
   score: number;
   isPlayerTurn: boolean;
 }
+export type FinalPlayerScore = Omit<Player, "isHost" | "isPlayerTurn">;

@@ -11,9 +11,12 @@ import { Canva } from "@/components/Canva";
 import WordChossing from "@/components/WordChossing";
 import { GameMessageHelper } from "@/components/GameMessageHelper";
 import { EachTurnScore } from "@/components/EachTurnScore";
+import FinalScoreboard from "@/components/FinalScoreboard";
 
 export default function Game() {
-  const { gameState, isMyTurn } = useAppSelector((state) => state.game);
+  const { gameState, isMyTurn, finalScores } = useAppSelector(
+    (state) => state.game
+  );
   const round = useAppSelector((state) => state.round);
 
   if (gameState === GameState.USER_REGISTERING) {
@@ -21,8 +24,12 @@ export default function Game() {
   }
 
   function renderContent() {
-    // show game setting
+    // if GameEnds
+    if (gameState === GameState.COMPLETED && finalScores) {
+      return <FinalScoreboard finalScores={finalScores} />;
+    }
     if (gameState === GameState.ROOM_CREATION) {
+      // show game setting
       return <GameSettings />;
     }
     // show new round start message

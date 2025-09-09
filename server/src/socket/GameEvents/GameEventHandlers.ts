@@ -67,6 +67,7 @@ export function announceRound(
   io.to(roomId).emit("game:round-change", {
     message: `Round ${round}`,
     duration: ROUND_START_TIME,
+    round: round,
   });
 
   // after delay, continue with turn

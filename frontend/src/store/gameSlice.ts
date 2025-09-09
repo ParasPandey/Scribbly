@@ -1,5 +1,6 @@
 import { GameState } from "@/enums";
-import { InGameSettings, Scores } from "@/types/Game";
+import { InGameSettings } from "@/types/Game";
+import { FinalPlayerScore } from "@/types/Player";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface GameStore {
@@ -9,6 +10,7 @@ interface GameStore {
   isMyTurn: boolean;
   currentRoundNumber: number;
   isGameStarted: boolean;
+  finalScores?: FinalPlayerScore[];
 }
 
 const initialState: GameStore = {
@@ -74,6 +76,9 @@ const gameSlice = createSlice({
     updateGameStarted: (state, action: PayloadAction<boolean>) => {
       state.isGameStarted = action.payload;
     },
+    updateFinalScores: (state, action: PayloadAction<FinalPlayerScore[]>) => {
+      state.finalScores = action.payload;
+    },
   },
 });
 
@@ -92,5 +97,6 @@ export const {
   setIsMyTurn,
   updateCurrRoundNumber,
   updateGameStarted,
+  updateFinalScores,
 } = gameSlice.actions;
 export default gameSlice.reducer;

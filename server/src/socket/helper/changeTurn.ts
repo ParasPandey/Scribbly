@@ -1,5 +1,6 @@
 import { rooms, roomTimers } from "../../store";
 import { announceRound } from "../GameEvents/GameEventHandlers";
+import { endGame } from "./endGame";
 import { startTurn } from "./startTurn";
 
 export function changeTurn(roomId: string) {
@@ -24,6 +25,14 @@ export function changeTurn(roomId: string) {
   if (room.game.currentTurnIndex === 0) {
     room.game.roundNumber++;
     isNewRound = true;
+
+    // check this all rounds are done
+    // 🎯 End game check
+    if (room.game.roundNumber > room.gameSetting.rounds) {
+      console.log("Game end");
+      endGame(roomId); // 🔥 stop game + announce results
+      return;
+    }
   }
 
   // clear current turn

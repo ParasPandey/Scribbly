@@ -12,7 +12,6 @@ export interface Player {
   name: string;
   avatar: AvatarType;
   isHost: boolean;
-  rank: number;
   score: number;
   isPlayerTurn: boolean;
 }
@@ -101,3 +100,6 @@ export interface Scores {
   totalScore: number;
   totalRank: number;
 }
+
+export interface FinalPlayerScore
+  extends Omit<Player, "isHost" | "isPlayerTurn"> {}

@@ -1,8 +1,7 @@
 import { io } from "../../server";
 import { playerToSocket, rooms, roomTimers, socketToPlayer } from "../../store";
 import { MessageTypes, SocketType } from "../../types";
-import { isCorrectGuess } from "../helper";
-import { changeTurn } from "../helper/changeTurn";
+import { isCloseGuess, isCorrectGuess } from "../helper";
 import { handleTurnTimeout } from "../helper/handleTurnTimeout";
 
 export function ChatEvents(socket: SocketType) {
@@ -93,6 +92,24 @@ export function ChatEvents(socket: SocketType) {
 
       room.chat.push(chatMessage);
       io.to(roomId).emit("chat:message", chatMessage);
+
+      // 🎯 Case 4: if guess is not correct but partially correct or close guess(only to self)
+      const isClose = isCloseGuess(
+        message,
+        playerId,
+        currentTurn,
+        isGameRunning
+      );
+      if (isGameRunning && isClose) {
+        // only send to self
+        io.to(socket.id).emit("chat:message", {
+          message: `You are very close!`,
+          sender: "system",
+          messageType: MessageTypes.PARTIALLY_GUESSED,
+          timestamp: Date.now(),
+        });
+        return;
+      }
     }
   );
 }

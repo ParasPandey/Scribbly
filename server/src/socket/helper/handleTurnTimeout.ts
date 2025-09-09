@@ -12,11 +12,14 @@ export function handleTurnTimeout(roomId: string) {
     ? "Everyone gussed the word!"
     : "Time is up!";
 
+  console.log("final scores", rooms[roomId].players);
   io.to(roomId).emit("game:score", {
     scores: scores,
     message: scoreMsg,
     word: prevSelectedWord,
   });
+
+  // console.log("scores", rooms[roomId].players);
   setTimeout(() => {
     io.to(roomId).emit("turn:timeout", { roomId });
     changeTurn(roomId);

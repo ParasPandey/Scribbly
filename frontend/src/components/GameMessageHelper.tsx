@@ -16,7 +16,9 @@ export function GameMessageHelper({
   return (
     <div className="flex justify-center items-center bg-blue-950 flex-col gap-3">
       <Animate>
-        <p className="text-white font-bold text-5xl">{message.text}</p>
+        <p className="text-white font-bold text-5xl text-center">
+          {message.text}
+        </p>
         {isShowAvatar && message.avatar && (
           <Image src={message.avatar} alt="avatar" height={100} width={100} />
         )}

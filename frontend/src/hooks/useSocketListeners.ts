@@ -8,9 +8,10 @@ import {
   setIsMyTurn,
   updateCurrRoundNumber,
   updateGameStarted,
+  updateFinalScores,
 } from "@/store/gameSlice";
 import { useRouter } from "next/navigation";
-import { Player } from "@/types/Player";
+import { FinalPlayerScore, Player } from "@/types/Player";
 import { GameState } from "@/enums";
 import { useSocket } from "@/context/socketContext";
 import { InGameSettings, Scores } from "@/types/Game";
@@ -123,20 +124,17 @@ export const useSocketListeners = () => {
       isMyTurn,
       words,
       duration,
-      currentRound,
       message,
     }: {
       isMyTurn: boolean;
       words: string[];
       duration: number;
-      currentRound: number;
       message: RoundMessage | undefined;
     }) => {
       //set new states
       dispatch(setIsMyTurn(isMyTurn));
       dispatch(setWordsList(words));
       dispatch(setTimmer(duration));
-      dispatch(updateCurrRoundNumber(currentRound));
       if (!isMyTurn && message) {
         dispatch(setRoundMessage(message));
       }
@@ -163,12 +161,15 @@ export const useSocketListeners = () => {
     const handleRoundChange = ({
       message,
       duration,
+      round,
     }: {
       message: string;
       duration: number;
+      round: number;
     }) => {
       dispatch(setTimmer(duration));
       dispatch(setRoundMessage({ text: message, avatar: "" }));
+      dispatch(updateCurrRoundNumber(round));
     };
 
     const handleGameScore = ({
@@ -206,6 +207,14 @@ export const useSocketListeners = () => {
       dispatch(updatePlayerScores(totalScores));
     };
 
+    const handleGameEnd = (finalScores: FinalPlayerScore[]) => {
+      console.log(finalScores);
+      dispatch(updateGameState(GameState.COMPLETED));
+      dispatch(updateFinalScores(finalScores));
+
+      // reset other things which we don't need
+    };
+
     socket.on("room-created", handleRoomCreated);
     socket.on("player-joined", handleRoomJoined);
     socket.on("room-players", handleRoomPlayerUpdate);
@@ -221,6 +230,7 @@ export const useSocketListeners = () => {
     socket.on("game:round-change", handleRoundChange);
     socket.on("turn:timeout", handleTurnTimeout);
     socket.on("game:score", handleGameScore);
+    socket.on("game:ended", handleGameEnd);
 
     return () => {
       socket.off("room-created", handleRoomCreated);
@@ -238,6 +248,7 @@ export const useSocketListeners = () => {
       socket.off("game:round-change", handleRoundChange);
       socket.off("turn:timeout", handleTurnTimeout);
       socket.off("game:score", handleGameScore);
+      socket.off("game:ended", handleGameEnd);
     };
   }, [dispatch, router, players]);
 };

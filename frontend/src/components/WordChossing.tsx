@@ -16,7 +16,7 @@ const WordChossing = () => {
     <div className="bg-[#35394a] flex flex-col justify-center items-center gap-5">
       <Animate>
         <p className="text-white text-5xl">Choose a word</p>
-        <div className="flex gap-6">
+        <div className="flex gap-6 flex-wrap justify-center">
           {wordsList.map((word: string) => (
             <button
               className="flex justify-center items-center text-2xl text-white border-3 border-white p-2 

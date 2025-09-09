@@ -7,24 +7,34 @@ export function calculateScore(roomId: string): {
   isEveryPlayerGuessed: boolean;
 } {
   const room = rooms[roomId];
-  if (!room || !room.game || !room.game.currentTurn)
+  if (!room || !room.game || !room.game.currentTurn) {
     return { scores: [], isEveryPlayerGuessed: false };
+  }
 
   const currentTurn = room.game.currentTurn;
   const startTime = currentTurn.startAt;
   const totalPlayers = Object.keys(room.players).length;
-  if (!startTime) return { scores: [], isEveryPlayerGuessed: false };
 
+  if (!startTime) {
+    return { scores: [], isEveryPlayerGuessed: false };
+  }
+
+  // --- Case: nobody guessed ---
   if (!currentTurn.guessedBy || currentTurn.guessedBy.size === 0) {
-    // everyone missed → roundScore = 0 for all
+    const totalSorted = Object.values(room.players)
+      .map((p) => ({ id: p.id, score: p.score }))
+      .sort((a, b) => b.score - a.score);
+
+    const totalRanks = assignDenseRanks(totalSorted);
+
     return {
       scores: Object.values(room.players).map((p) => ({
         playerId: p.id,
         playerName: p.name,
         roundScore: 0,
-        roundRank: totalPlayers,
+        roundRank: totalPlayers, // everyone tied at bottom
         totalScore: p.score,
-        totalRank: 0,
+        totalRank: totalRanks[p.id],
       })),
       isEveryPlayerGuessed: false,
     };
@@ -52,21 +62,19 @@ export function calculateScore(roomId: string): {
   // Drawer scoring
   const drawerId = currentTurn.currentPlayerId;
   if (drawerId && room.players[drawerId]) {
-    let drawerScore = guesses.length * 50;
-    if (guesses.length === totalPlayers - 1) drawerScore += 200;
+    let drawerScore = Math.min(guesses.length * 75, 200);
+    if (guesses.length === totalPlayers - 1) drawerScore += 50;
 
     roundScores[drawerId] = (roundScores[drawerId] ?? 0) + drawerScore;
     room.players[drawerId].score += drawerScore;
   }
 
   // --- Compute ranks (dense ranking) ---
-  // Round ranks
   const roundSorted = Object.entries(roundScores)
     .map(([id, score]) => ({ id, score }))
     .sort((a, b) => b.score - a.score);
   const roundRanks = assignDenseRanks(roundSorted);
 
-  // Total ranks
   const totalSorted = Object.values(room.players)
     .map((p) => ({ id: p.id, score: p.score }))
     .sort((a, b) => b.score - a.score);
@@ -80,7 +88,7 @@ export function calculateScore(roomId: string): {
     scores: Object.values(room.players).map((p) => ({
       playerId: p.id,
       playerName: p.name,
-      roundScore: roundScores[p.id] ?? 0, // explicit 0
+      roundScore: roundScores[p.id] ?? 0,
       roundRank: roundRanks[p.id] ?? totalPlayers,
       totalScore: p.score,
       totalRank: totalRanks[p.id],

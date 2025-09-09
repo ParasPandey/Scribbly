@@ -24,7 +24,7 @@ export default function PlayerCard({ player, even, isSelf }: PlayerCardProps) {
         )}
       </div>
       <div className="flex flex-col items-center">
-        <p className="text-[#4898fe] font-semibold">
+        <p className="text-[#4898fe] font-semibold text-center">
           {player.name} {isSelf && <span>(You)</span>}
         </p>
         <p className="text-sm text-gray-700">{player.score} points</p>
