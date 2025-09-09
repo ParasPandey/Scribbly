@@ -11,7 +11,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const socketRef = useRef<Socket | null>(null);
 
   if (!socketRef.current) {
-    socketRef.current = io("http://localhost:4000", {
+    socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL as string, {
       transports: ["websocket"],
       autoConnect: false, // safer, connect manually
     });
