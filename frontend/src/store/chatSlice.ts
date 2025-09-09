@@ -1,5 +1,6 @@
 import { Chat } from "@/types/Chat";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { resetAll } from "./rootActions";
 
 interface ChatSliceState {
   chats: Chat[];
@@ -19,6 +20,11 @@ const chatSlice = createSlice({
     addChat: (state, action: PayloadAction<Chat>) => {
       state.chats.push(action.payload);
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(resetAll, (state) => {
+      state.chats = [];
+    });
   },
 });
 

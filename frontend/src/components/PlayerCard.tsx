@@ -5,12 +5,18 @@ interface PlayerCardProps {
   player: Player;
   even: boolean;
   isSelf: boolean;
+  isPlayerTurn: boolean;
 }
-export default function PlayerCard({ player, even, isSelf }: PlayerCardProps) {
+export default function PlayerCard({
+  player,
+  even,
+  isSelf,
+  isPlayerTurn,
+}: PlayerCardProps) {
   return (
     <div
       className={`grid grid-cols-[1fr_3fr_1.3fr] gap-2 p-1 pl-3 pr-2 rounded-sm shadow-sm w-full 
-        ${even ? "bg-white" : "bg-gray-200"} ${player.isPlayerTurn && "border-4 border-green-400"}`}
+        ${even ? "bg-white" : "bg-gray-200"} ${isPlayerTurn && "border-4 border-green-400"}`}
     >
       <div className="flex flex-col  justify-center">
         <span className="text-lg font-bold">#{player.rank}</span>
@@ -30,7 +36,7 @@ export default function PlayerCard({ player, even, isSelf }: PlayerCardProps) {
         <p className="text-sm text-gray-700">{player.score} points</p>
       </div>
       <div className="flex items-center justify-end">
-        {player.isPlayerTurn && (
+        {isPlayerTurn && (
           <Image
             src="/pencil.png" // your pixel avatar
             alt="Pencil"

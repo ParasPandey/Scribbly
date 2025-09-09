@@ -1,5 +1,6 @@
 import { RoundMessage, RoundScores, RoundState } from "@/types/Round";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { resetAll } from "./rootActions";
 
 const initialState: RoundState = {
   wordsList: [],
@@ -9,6 +10,7 @@ const initialState: RoundState = {
   message: undefined,
   isRoundChange: false,
   shouldDisplayScores: false,
+  currentTurnPlayerId: null,
 };
 
 const roundSlice = createSlice({
@@ -44,7 +46,7 @@ const roundSlice = createSlice({
       state.isRoundStarted = true;
       state.timmer = action.payload.timmer;
     },
-    resetRound: () => initialState,
+
     setRoundChange: (state, action: PayloadAction<{ message: string }>) => {
       state.isRoundChange = true;
       state.message = { text: action.payload.message };
@@ -56,6 +58,15 @@ const roundSlice = createSlice({
     setShouldDisplayScores: (state, action: PayloadAction<boolean>) => {
       state.shouldDisplayScores = action.payload;
     },
+
+    setCurrentPlayerId: (state, action: PayloadAction<string>) => {
+      state.currentTurnPlayerId = action.payload;
+    },
+
+    resetRound: () => initialState,
+  },
+  extraReducers: (builder) => {
+    builder.addCase(resetAll, () => initialState);
   },
 });
 
@@ -69,6 +80,7 @@ export const {
   startRound,
   updateRoundScores,
   setShouldDisplayScores,
+  setCurrentPlayerId,
 } = roundSlice.actions;
 
 export default roundSlice.reducer;

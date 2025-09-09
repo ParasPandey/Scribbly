@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { CanvasPath } from "react-sketch-canvas";
+import { resetAll } from "./rootActions";
 
 interface CanvasSliceState {
   canvasPaths: CanvasPath[];
@@ -22,6 +23,11 @@ const canvasSlice = createSlice({
     clearCanvas: (state) => {
       state.canvasPaths = [];
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(resetAll, (state) => {
+      state.canvasPaths = [];
+    });
   },
 });
 

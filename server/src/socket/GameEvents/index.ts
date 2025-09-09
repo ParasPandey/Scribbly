@@ -59,10 +59,6 @@ export function GameEvents(socket: SocketType) {
     io.to(roomId).emit("game:start");
     // ⏳ Announce Round 1 → then start first turn
     announceRound(roomId, 1, () => startTurn(roomId));
-
-    // io.to(roomId).emit("room-players", {
-    //   players: room.players
-    // });
   });
 
   // word selected → start timer here

@@ -4,6 +4,7 @@ import { Player } from "@/types/Player";
 
 export function PlayerPanel() {
   const { players } = useAppSelector((state) => state.players);
+  const { currentTurnPlayerId } = useAppSelector((state) => state.round);
   const selfId = useAppSelector((state) => state.user.uuid);
   return (
     <div className="player-panel flex flex-col">
@@ -13,6 +14,7 @@ export function PlayerPanel() {
           isSelf={player.id === selfId}
           player={player}
           even={index % 2 === 0}
+          isPlayerTurn={currentTurnPlayerId === player.id}
         />
       ))}
     </div>

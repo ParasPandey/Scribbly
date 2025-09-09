@@ -2,6 +2,7 @@ import { GameState } from "@/enums";
 import { InGameSettings } from "@/types/Game";
 import { FinalPlayerScore } from "@/types/Player";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { resetAll } from "./rootActions";
 
 interface GameStore {
   roomId: string;
@@ -79,6 +80,18 @@ const gameSlice = createSlice({
     updateFinalScores: (state, action: PayloadAction<FinalPlayerScore[]>) => {
       state.finalScores = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(resetAll, (state) => {
+      // preserve roomId and gameSettings
+      const { roomId, gameSettings } = state;
+      return {
+        ...initialState,
+        roomId,
+        gameSettings,
+        gameState: GameState.ROOM_CREATION,
+      };
+    });
   },
 });
 

@@ -1,5 +1,6 @@
 import { Player } from "@/types/Player";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { resetAll } from "./rootActions";
 
 interface PlayersSliceState {
   players: Record<string, Player>;
@@ -48,6 +49,11 @@ const playersSlice = createSlice({
     setMyTurn(state, action: PayloadAction<boolean>) {
       state.isMyTurn = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(resetAll, (state) => {
+      state.isMyTurn = false;
+    });
   },
 });
 

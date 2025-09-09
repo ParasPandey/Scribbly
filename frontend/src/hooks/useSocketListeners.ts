@@ -23,6 +23,7 @@ import { Chat } from "@/types/Chat";
 import { addChat } from "@/store/chatSlice";
 import {
   resetRound,
+  setCurrentPlayerId,
   setRoundMessage,
   setShouldDisplayScores,
   setTimmer,
@@ -33,6 +34,7 @@ import {
 import { RoundMessage, RoundScores } from "@/types/Round";
 import { setPlayers, updatePlayerScores } from "@/store/playerSlice";
 import { getNameFromPlayerId } from "@/utils/getNameFromPlayerId";
+import { resetAll } from "@/store/rootActions";
 
 export const useSocketListeners = () => {
   const dispatch = useAppDispatch();
@@ -120,24 +122,25 @@ export const useSocketListeners = () => {
     const handleClearCanvaPaths = () => {
       dispatch(clearCanvas());
     };
-    const handleStartingTurn = ({
+
+    const handleChangeTurn = ({
+      playerId,
       isMyTurn,
       words,
       duration,
       message,
     }: {
+      playerId: string;
       isMyTurn: boolean;
       words: string[];
       duration: number;
       message: RoundMessage | undefined;
     }) => {
-      //set new states
+      dispatch(setCurrentPlayerId(playerId));
       dispatch(setIsMyTurn(isMyTurn));
       dispatch(setWordsList(words));
       dispatch(setTimmer(duration));
-      if (!isMyTurn && message) {
-        dispatch(setRoundMessage(message));
-      }
+      if (!isMyTurn && message) dispatch(setRoundMessage(message));
     };
 
     const handleRoundStarted = ({
@@ -215,6 +218,10 @@ export const useSocketListeners = () => {
       // reset other things which we don't need
     };
 
+    const handleGameReset = () => {
+      dispatch(resetAll());
+    };
+
     socket.on("room-created", handleRoomCreated);
     socket.on("player-joined", handleRoomJoined);
     socket.on("room-players", handleRoomPlayerUpdate);
@@ -225,12 +232,13 @@ export const useSocketListeners = () => {
     socket.on("canvas:paths", handleSetCanvaPaths);
     socket.on("canvas:addPath", handleAddCanvaPaths);
     socket.on("canvas:clear", handleClearCanvaPaths);
-    socket.on("turn:word-selection", handleStartingTurn);
+    socket.on("turn:change-turn", handleChangeTurn);
     socket.on("game:round-started", handleRoundStarted);
     socket.on("game:round-change", handleRoundChange);
     socket.on("turn:timeout", handleTurnTimeout);
     socket.on("game:score", handleGameScore);
     socket.on("game:ended", handleGameEnd);
+    socket.on("game:reset", handleGameReset);
 
     return () => {
       socket.off("room-created", handleRoomCreated);
@@ -243,12 +251,13 @@ export const useSocketListeners = () => {
       socket.off("canvas:paths", handleSetCanvaPaths);
       socket.off("canvas:addPath", handleAddCanvaPaths);
       socket.off("canvas:clear", handleClearCanvaPaths);
-      socket.off("turn:word-selection", handleStartingTurn);
+      socket.off("turn:change-turn", handleChangeTurn);
       socket.off("game:round-started", handleRoundStarted);
       socket.off("game:round-change", handleRoundChange);
       socket.off("turn:timeout", handleTurnTimeout);
       socket.off("game:score", handleGameScore);
       socket.off("game:ended", handleGameEnd);
+      socket.off("game:reset", handleGameReset);
     };
   }, [dispatch, router, players]);
 };

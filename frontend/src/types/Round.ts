@@ -7,6 +7,7 @@ export interface RoundState {
   isRoundChange: boolean;
   roundScores?: RoundScores[];
   shouldDisplayScores: boolean;
+  currentTurnPlayerId: string | null;
 }
 
 export interface RoundMessage {

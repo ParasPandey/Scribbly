@@ -1,7 +1,9 @@
+import { GAME_RESET_TIME } from "../../constants";
 import { io } from "../../server";
 import { rooms, roomTimers } from "../../store";
 import { FinalPlayerScore } from "../../types";
 import { assignDenseRanks } from "../../utils";
+import { resetRoomData } from "./resetRoomData";
 
 export function endGame(roomId: string) {
   const room = rooms[roomId];
@@ -34,26 +36,11 @@ export function endGame(roomId: string) {
   // 📢 Broadcast game end + leaderboard
   io.to(roomId).emit("game:ended", finalScores);
 
-  // --- 2. Reset game state ---
-  Object.values(room.players).forEach((player) => {
-    player.score = 0;
-    player.isPlayerTurn = false;
-  });
-
-  room.game = {
-    currentTurnIndex: 0,
-    roundNumber: 0,
-    currentTurn: undefined,
-    turnOrder: [],
-    canvas: [],
-    wordsCollection: [],
-    score: new Map<string, number>(),
-  };
-
-  // 🧹 Cleanup
-  if (roomTimers[roomId]) {
-    clearTimeout(roomTimers[roomId]);
-    delete roomTimers[roomId];
-  }
-  delete room.game;
+  roomTimers[roomId] = setTimeout(() => {
+    resetRoomData(roomId);
+    io.to(roomId).emit("room-players", {
+      players: room.players,
+    });
+    io.to(roomId).emit("game:reset");
+  }, GAME_RESET_TIME * 1000);
 }

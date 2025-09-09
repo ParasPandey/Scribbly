@@ -33,12 +33,13 @@ export function startTurn(roomId: string) {
         room.game.turnOrder[room.game.currentTurnIndex];
     }
 
-    // emit word-selection event
-    io.to(currentSocketId).emit("turn:word-selection", {
+    // emit change turn event
+    io.to(currentSocketId).emit("turn:change-turn", {
+      playerId: room.game?.currentTurn?.currentPlayerId,
       isMyTurn: true,
+      currentRound: room.game?.roundNumber,
       words: words,
       duration: WORD_GUESSING_TIME,
-      currentRound: room.game?.roundNumber,
       message: null,
     });
 
@@ -47,11 +48,13 @@ export function startTurn(roomId: string) {
       if (pid !== currentPlayerId) {
         const sid = playerToSocket[pid];
         if (sid) {
-          io.to(sid).emit("turn:word-selection", {
+          // emit change turn event to others players
+          io.to(sid).emit("turn:change-turn", {
+            playerId: room.game?.currentTurn?.currentPlayerId,
             isMyTurn: false,
+            currentRound: room.game?.roundNumber,
             words: [],
             duration: WORD_GUESSING_TIME,
-            currentRound: room.game?.roundNumber,
             message: {
               text: `${room.players[currentPlayerId].name} is choosing a word!!`,
               avatar: room.players[currentPlayerId].avatar.src,
@@ -60,11 +63,6 @@ export function startTurn(roomId: string) {
         }
       }
     });
-
-    // only for now will update this
-    // io.to(roomId).emit("room-players", {
-    //   players: room.players,
-    // });
 
     // 🔹 safety fallback: auto-pick random after 10s if no selection
     roomTimers[roomId] = setTimeout(() => {
