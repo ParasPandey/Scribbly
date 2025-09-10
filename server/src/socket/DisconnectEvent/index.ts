@@ -1,6 +1,7 @@
 import { io } from "../..";
 import { playerToSocket, rooms, roomTimers, socketToPlayer } from "../../store";
-import { SocketType } from "../../types";
+import { MessageTypes, SocketType } from "../../types";
+import { endGame } from "../helper/endGame";
 
 export function DisconnectEvent(socket: SocketType) {
   // disconnect
@@ -20,7 +21,7 @@ export function DisconnectEvent(socket: SocketType) {
     io.to(roomId).emit("chat:message", {
       message: `${player?.name ?? "A player"} left the room`,
       sender: "system",
-      messageType: "room-leave",
+      messageType: MessageTypes.ALERT,
       timestamp: Date.now(),
     });
 
@@ -28,8 +29,12 @@ export function DisconnectEvent(socket: SocketType) {
       players: room.players,
     });
 
-    // if empty, clean up
-    if (Object.keys(room.players).length === 0) {
+    const remainingPlayers = Object.keys(room.players).length;
+    if (remainingPlayers === 1) {
+      endGame(roomId);
+      console.log(`🏁 Game in room ${roomId} ended — only one player left.`);
+    } else if (remainingPlayers === 0) {
+      // no players left → cleanup
       if (roomTimers[roomId]) clearTimeout(roomTimers[roomId]);
       delete rooms[roomId];
       console.log(`🗑️ Room ${roomId} deleted (no players left)`);

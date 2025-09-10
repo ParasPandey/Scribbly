@@ -9,6 +9,12 @@ export function endGame(roomId: string) {
   const room = rooms[roomId];
   if (!room || !room.game) return;
 
+  // --- 🔴 Kill any running timers immediately ---
+  if (roomTimers[roomId]) {
+    clearTimeout(roomTimers[roomId]);
+    delete roomTimers[roomId];
+  }
+
   // --- 1. Prepare final scores payload ---
   const players = Object.values(room.players);
 
@@ -35,8 +41,10 @@ export function endGame(roomId: string) {
 
   // 📢 Broadcast game end + leaderboard
   io.to(roomId).emit("game:ended", finalScores);
+  console.log("final score send", finalScores);
 
   roomTimers[roomId] = setTimeout(() => {
+    console.log("reset data");
     resetRoomData(roomId);
     io.to(roomId).emit("room-players", {
       players: room.players,

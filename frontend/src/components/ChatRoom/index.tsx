@@ -3,14 +3,22 @@ import clsx from "clsx";
 import { SearchField } from "./SerchField";
 import { Chat } from "@/types/Chat";
 import { MessageTypes } from "../../../enums";
+import { useEffect, useRef } from "react";
 
 export const ChatRoom = () => {
   const { chats } = useAppSelector((state) => state.chat);
 
+  // Ref for auto-scrolling
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Scroll to bottom when chats change
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chats]);
+
   return (
     <div className="chat-room bg-white rounded-sm shadow-sm overflow-hidden pt-1 pb-1">
       <div className="chat-messages overflow-y-auto h-[90%] mb-4">
-        {/* Chat messages will be displayed here */}
         {chats?.map((chat: Chat, index: number) => (
           <div
             key={index}
@@ -20,8 +28,7 @@ export const ChatRoom = () => {
               chat.messageType === MessageTypes.ROOM_CREATION &&
                 " !text-[#ffa844]",
               chat.messageType === MessageTypes.ROOM_JOIN && " !text-[#57cd27]",
-              chat.messageType === MessageTypes.ROOM_Leave &&
-                " !text-[#d36835]",
+              chat.messageType === MessageTypes.ALERT && " !text-[#cf5518]",
               chat.messageType === MessageTypes.INFO && " !text-[#e2cb00]",
               chat.messageType === MessageTypes.SELF && " !text-[#8ab554]",
               chat.messageType === MessageTypes.START_DRAWING &&
@@ -42,6 +49,8 @@ export const ChatRoom = () => {
             )}
           </div>
         ))}
+        {/* Invisible div to scroll into view */}
+        <div ref={messagesEndRef} />
       </div>
       <SearchField />
     </div>

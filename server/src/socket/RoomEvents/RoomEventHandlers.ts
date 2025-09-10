@@ -1,4 +1,4 @@
-import { InGameSettings, Player, Room } from "../../types";
+import { InGameSettings, MessageTypes, Player, Room } from "../../types";
 import { playerToSocket, rooms, socketToPlayer } from "../../store";
 import { io } from "../..";
 
@@ -39,7 +39,7 @@ export const createRoom = (
   const chatMessage = {
     message: `${player.name} is now the room owner!`,
     sender: "system",
-    messageType: "room-creation",
+    messageType: MessageTypes.ROOM_CREATION,
     timestamp: Date.now(),
   };
   rooms[roomId].chat.push(chatMessage);
@@ -78,7 +78,7 @@ export const joinRoom = (
   const chatMessage = {
     message: `${player.name} joined the room`,
     sender: "system",
-    messageType: "room-join",
+    messageType: MessageTypes.ROOM_JOIN,
     timestamp: Date.now(),
   };
   room.chat.push(chatMessage);

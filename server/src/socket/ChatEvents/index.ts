@@ -64,7 +64,6 @@ export function ChatEvents(socket: SocketType) {
 
         // ✅ check if all guessers are done
         const totalGuessers = room.game!.turnOrder.length - 1;
-        console.log(currentTurn!.guessedBy!, totalGuessers);
         if (currentTurn!.guessedBy!.size === totalGuessers) {
           console.log(
             "✅ Everyone guessed correctly. Skipping to next turn..."

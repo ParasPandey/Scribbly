@@ -7,7 +7,6 @@ export function changeTurn(roomId: string) {
   const room = rooms[roomId];
   if (!room || !room.game) return;
 
-  console.log("change turn");
   // stop timer if any
   if (roomTimers[roomId]) {
     clearTimeout(roomTimers[roomId]);
@@ -29,7 +28,6 @@ export function changeTurn(roomId: string) {
     // check this all rounds are done
     // 🎯 End game check
     if (room.game.roundNumber > room.gameSetting.rounds) {
-      console.log("Game end");
       endGame(roomId); // 🔥 stop game + announce results
       return;
     }

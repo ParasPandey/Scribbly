@@ -1,3 +1,4 @@
+import { roomTimers } from "./../../store";
 import { io } from "../..";
 import { rooms } from "../../store";
 import { changeTurn } from "./changeTurn";
@@ -12,15 +13,13 @@ export function handleTurnTimeout(roomId: string) {
     ? "Everyone gussed the word!"
     : "Time is up!";
 
-  console.log("final scores", rooms[roomId].players);
   io.to(roomId).emit("game:score", {
     scores: scores,
     message: scoreMsg,
     word: prevSelectedWord,
   });
 
-  // console.log("scores", rooms[roomId].players);
-  setTimeout(() => {
+  roomTimers[roomId] = setTimeout(() => {
     io.to(roomId).emit("turn:timeout", { roomId });
     changeTurn(roomId);
   }, 5000);

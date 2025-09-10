@@ -35,6 +35,5 @@ export const io = new Server(server, {
 // ------------- sockets -------------
 runningSocket();
 
-console.log(process.env.PORT);
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => console.log(`✅ Server listening on port ${PORT}`));

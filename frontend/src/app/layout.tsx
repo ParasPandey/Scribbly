@@ -14,7 +14,7 @@ const nunitoSans = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Scriblly.io",
+  title: "Scribbly.io",
   description: "Game",
 };
 
@@ -25,6 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <link rel="icon" href="/favicon.png" type="image/png" />
       <body className={`${nunitoSans.variable}`}>
         <Providers>
           <SocketProvider>

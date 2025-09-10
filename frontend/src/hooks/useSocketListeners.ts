@@ -211,7 +211,6 @@ export const useSocketListeners = () => {
     };
 
     const handleGameEnd = (finalScores: FinalPlayerScore[]) => {
-      console.log(finalScores);
       dispatch(updateGameState(GameState.COMPLETED));
       dispatch(updateFinalScores(finalScores));
 

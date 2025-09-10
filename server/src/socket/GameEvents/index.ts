@@ -1,6 +1,6 @@
 import { shuffle } from "lodash";
 import { playerToSocket, rooms, roomTimers, socketToPlayer } from "../../store";
-import { InGameSettings, SocketType } from "../../types";
+import { InGameSettings, MessageTypes, SocketType } from "../../types";
 import { getCurrentPlayerId, getRandomWords } from "../../utils";
 import { words } from "../../data/words";
 import { io } from "../..";
@@ -31,6 +31,19 @@ export function GameEvents(socket: SocketType) {
     const room = rooms[roomId];
     if (!room) return;
 
+    // check if player are less than 2
+    if (Object.keys(room.players).length <= 1) {
+      const chatMessage = {
+        message: "You need at least 2 players to start the game!",
+        sender: "system",
+        messageType: MessageTypes.ALERT,
+        timestamp: Date.now(),
+      };
+
+      room.chat.push(chatMessage);
+      io.to(roomId).emit("chat:message", chatMessage);
+      return;
+    }
     const playerIds = Object.keys(room.players);
     const order = shuffle(playerIds);
 
