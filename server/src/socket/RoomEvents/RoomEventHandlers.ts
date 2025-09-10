@@ -1,6 +1,6 @@
 import { InGameSettings, Player, Room } from "../../types";
 import { playerToSocket, rooms, socketToPlayer } from "../../store";
-import { io } from "../../server";
+import { io } from "../..";
 
 export const createRoom = (
   player: Player,

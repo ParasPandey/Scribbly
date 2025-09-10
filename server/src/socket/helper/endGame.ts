@@ -1,5 +1,5 @@
 import { GAME_RESET_TIME } from "../../constants";
-import { io } from "../../server";
+import { io } from "../..";
 import { rooms, roomTimers } from "../../store";
 import { FinalPlayerScore } from "../../types";
 import { assignDenseRanks } from "../../utils";

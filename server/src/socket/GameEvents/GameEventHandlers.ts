@@ -1,5 +1,5 @@
 import { ROUND_START_TIME } from "../../constants";
-import { io } from "../../server";
+import { io } from "../..";
 import { playerToSocket, rooms, roomTimers } from "../../store";
 import { MessageTypes } from "../../types";
 import { getCurrentPlayerId } from "../../utils";

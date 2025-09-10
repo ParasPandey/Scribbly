@@ -1,5 +1,5 @@
 import { WORD_GUESSING_TIME } from "../../constants";
-import { io } from "../../server";
+import { io } from "../..";
 import { playerToSocket, rooms, roomTimers } from "../../store";
 import { getRandomWords } from "../../utils";
 import { handleWordSelected } from "../GameEvents/GameEventHandlers";

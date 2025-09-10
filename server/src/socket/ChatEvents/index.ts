@@ -1,4 +1,4 @@
-import { io } from "../../server";
+import { io } from "../..";
 import { playerToSocket, rooms, roomTimers, socketToPlayer } from "../../store";
 import { MessageTypes, SocketType } from "../../types";
 import { isCloseGuess, isCorrectGuess } from "../helper";

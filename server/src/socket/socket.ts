@@ -1,4 +1,4 @@
-import { io } from "../server";
+import { io } from "..";
 import { RoomEvents } from "./RoomEvents";
 import { GameEvents } from "./GameEvents";
 import { ChatEvents } from "./ChatEvents";

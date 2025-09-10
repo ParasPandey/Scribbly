@@ -3,7 +3,7 @@ import { playerToSocket, rooms, roomTimers, socketToPlayer } from "../../store";
 import { InGameSettings, SocketType } from "../../types";
 import { getCurrentPlayerId, getRandomWords } from "../../utils";
 import { words } from "../../data/words";
-import { io } from "../../server";
+import { io } from "../..";
 import { changeTurn } from "../helper/changeTurn";
 import { startTurn } from "../helper/startTurn";
 import { announceRound, handleWordSelected } from "./GameEventHandlers";

@@ -1,4 +1,4 @@
-import { io } from "../../server";
+import { io } from "../..";
 import { playerToSocket, rooms } from "../../store";
 import { CanvasPath, SocketType } from "../../types";
 import { getCurrentPlayerId } from "../../utils";

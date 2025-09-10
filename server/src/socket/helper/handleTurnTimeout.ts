@@ -1,4 +1,4 @@
-import { io } from "../../server";
+import { io } from "../..";
 import { rooms } from "../../store";
 import { changeTurn } from "./changeTurn";
 import { calculateScore } from "./scoreCalculation";
