@@ -1,4 +1,7 @@
 import { JSX } from "react";
+import { RoundState } from "./Round";
+import { CanvasPath } from "react-sketch-canvas";
+import { GameState } from "@/enums";
 
 export interface GameSettingOption {
   icon: JSX.Element;
@@ -28,4 +31,11 @@ export interface Scores {
   roundRank: number;
   totalScore: number;
   totalRank: number;
+}
+
+export interface JoinGame {
+  gamePhase: GameState;
+  canvas?: CanvasPath[];
+  currentTurn?: Partial<RoundState>;
+  roundNumber: number;
 }

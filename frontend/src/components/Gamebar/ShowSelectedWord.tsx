@@ -7,6 +7,7 @@ export function ShowSelectedWord() {
     (state) => state.round
   );
   const showSelectedText = isMyTurn && isRoundStarted;
+
   return (
     <>
       {/* round Not Started yes */}

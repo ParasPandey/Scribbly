@@ -47,11 +47,6 @@ const roundSlice = createSlice({
       state.timmer = action.payload.timmer;
     },
 
-    setRoundChange: (state, action: PayloadAction<{ message: string }>) => {
-      state.isRoundChange = true;
-      state.message = { text: action.payload.message };
-    },
-
     updateRoundScores(state, action: PayloadAction<RoundScores[]>) {
       state.roundScores = action.payload;
     },

@@ -70,7 +70,7 @@ export function ChatEvents(socket: SocketType) {
           );
 
           if (roomTimers[roomId]) {
-            clearTimeout(roomTimers[roomId]);
+            clearTimeout(roomTimers[roomId].timeoutId);
             delete roomTimers[roomId];
           }
 

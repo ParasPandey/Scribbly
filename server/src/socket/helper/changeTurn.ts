@@ -9,9 +9,13 @@ export function changeTurn(roomId: string) {
 
   // stop timer if any
   if (roomTimers[roomId]) {
-    clearTimeout(roomTimers[roomId]);
+    clearTimeout(roomTimers[roomId].timeoutId);
     delete roomTimers[roomId];
   }
+
+  // reset previous round details
+  room.game.canvas = [];
+  room.game.currentTurn = undefined;
 
   let currentTurnIndex =
     (room.game.currentTurnIndex + 1) % room.game.turnOrder.length;

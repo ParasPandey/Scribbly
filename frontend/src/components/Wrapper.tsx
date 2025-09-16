@@ -3,9 +3,12 @@
 import React, { useEffect } from "react";
 import { useSocketListeners } from "@/hooks/useSocketListeners";
 import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/store/hooks";
+import Loader from "./Loader";
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => {
   useSocketListeners();
+  const { isLoading } = useAppSelector((state) => state.game);
 
   const router = useRouter();
 
@@ -37,9 +40,12 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[url('/bck1.png')] bg-cover bg-center flex justify-center">
-      {children}
-    </div>
+    <>
+      <div className="min-h-screen bg-[url('/bck1.png')] bg-cover bg-center flex justify-center">
+        {children}
+      </div>
+      {isLoading && <Loader />}
+    </>
   );
 };
 

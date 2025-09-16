@@ -1,7 +1,12 @@
 import { shuffle } from "lodash";
-import { playerToSocket, rooms, roomTimers, socketToPlayer } from "../../store";
-import { InGameSettings, MessageTypes, SocketType } from "../../types";
-import { getCurrentPlayerId, getRandomWords } from "../../utils";
+import { rooms, socketToPlayer } from "../../store";
+import {
+  GamePhase,
+  InGameSettings,
+  MessageTypes,
+  SocketType,
+} from "../../types";
+import { getRandomWords } from "../../utils";
 import { words } from "../../data/words";
 import { io } from "../..";
 import { changeTurn } from "../helper/changeTurn";
@@ -67,6 +72,7 @@ export function GameEvents(socket: SocketType) {
         wordOptions: [],
       },
       score: score,
+      phase: GamePhase.GAME_START,
     };
 
     io.to(roomId).emit("game:start");
@@ -78,14 +84,10 @@ export function GameEvents(socket: SocketType) {
   socket.on(
     "turn:word-selected",
     ({ roomId, word }: { roomId: string; word: string }) => {
-      console.log(`⚡ manual-picked word: ${word}`);
       handleWordSelected(roomId, socket.id, word);
     }
   );
 
   // manual turn change (or client timeout event)
   socket.on("turn:change", (roomId: string) => changeTurn(roomId));
-  socket.on("turn:timeout", ({ roomId }: { roomId: string }) =>
-    changeTurn(roomId)
-  );
 }

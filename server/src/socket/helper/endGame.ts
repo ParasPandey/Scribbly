@@ -4,6 +4,7 @@ import { rooms, roomTimers } from "../../store";
 import { FinalPlayerScore } from "../../types";
 import { assignDenseRanks } from "../../utils";
 import { resetRoomData } from "./resetRoomData";
+import { startRoomTimer } from "./timmer";
 
 export function endGame(roomId: string) {
   const room = rooms[roomId];
@@ -11,7 +12,7 @@ export function endGame(roomId: string) {
 
   // --- 🔴 Kill any running timers immediately ---
   if (roomTimers[roomId]) {
-    clearTimeout(roomTimers[roomId]);
+    clearTimeout(roomTimers[roomId].timeoutId);
     delete roomTimers[roomId];
   }
 
@@ -43,12 +44,14 @@ export function endGame(roomId: string) {
   io.to(roomId).emit("game:ended", finalScores);
   console.log("final score send", finalScores);
 
-  roomTimers[roomId] = setTimeout(() => {
+  const timmerDuration = GAME_RESET_TIME * 1000;
+
+  startRoomTimer(roomId, timmerDuration, () => {
     console.log("reset data");
     resetRoomData(roomId);
     io.to(roomId).emit("room-players", {
       players: room.players,
     });
     io.to(roomId).emit("game:reset");
-  }, GAME_RESET_TIME * 1000);
+  });
 }

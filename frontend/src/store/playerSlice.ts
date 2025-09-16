@@ -62,7 +62,6 @@ export const {
   addPlayer,
   updatePlayer,
   removePlayer,
-  setMyTurn,
   updatePlayerScores,
 } = playersSlice.actions;
 export default playersSlice.reducer;

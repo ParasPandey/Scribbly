@@ -1,6 +1,14 @@
-import { InGameSettings, MessageTypes, Player, Room } from "../../types";
+import {
+  GamePhase,
+  InGameSettings,
+  JoinGame,
+  MessageTypes,
+  Player,
+  Room,
+} from "../../types";
 import { playerToSocket, rooms, socketToPlayer } from "../../store";
 import { io } from "../..";
+import { getRemainingTime } from "../helper/timmer";
 
 export const createRoom = (
   player: Player,
@@ -29,7 +37,7 @@ export const createRoom = (
   socketToPlayer[socketId] = { roomId, playerId: player.id };
   playerToSocket[player.id] = socketId;
 
-  io.to(roomId).emit("room-created", {
+  io.to(socketId).emit("room-created", {
     success: true,
     roomId,
     host: true,
@@ -65,7 +73,7 @@ export const joinRoom = (
   socketToPlayer[socketId] = { roomId, playerId: player.id };
   playerToSocket[player.id] = socketId;
 
-  io.to(roomId).emit("player-joined", {
+  io.to(socketId).emit("player-joined", {
     success: true,
     roomId,
     host: false,
@@ -85,9 +93,63 @@ export const joinRoom = (
 
   io.to(roomId).emit("chat:message", chatMessage);
 
-  if (room.isGameStarted) io.to(roomId).emit("game:start");
-  else
+  // if game already started
+  if (room.isGameStarted && room.game) {
+    // add player id to turnOrder and send all the data for current round and start the game
+    room.game.turnOrder = [...room.game.turnOrder, player.id];
+
+    const gameDetail: JoinGame = buildGameDetail(room);
+
+    io.to(socketId).emit("game:join", gameDetail);
+  } else
     io.to(roomId).emit("game-settings", {
       gameSetting: room.gameSetting,
     });
+};
+
+const buildGameDetail = (room: Room): JoinGame => {
+  const { game } = room;
+  if (!game) throw new Error("Game not started");
+
+  const gamePhase = game.phase;
+  const currPlayerId: string = room.game?.currentTurn
+    ?.currentPlayerId as string;
+
+  const gameDetail: JoinGame = {
+    gamePhase,
+    roundNumber: game.roundNumber,
+    currentTurn: {
+      timmer: getRemainingTime(room.id),
+    },
+  };
+
+  switch (gamePhase) {
+    case GamePhase.ROUND_ANNOUNCEMENT:
+      gameDetail.currentTurn!.message = {
+        text: `Round ${game.roundNumber}`,
+      };
+      break;
+
+    case GamePhase.WORD_SELECTION:
+      gameDetail.currentTurn = {
+        ...gameDetail.currentTurn,
+        currentTurnPlayerId: currPlayerId,
+        message: {
+          text: `${room.players[currPlayerId].name} is choosing a word!!`,
+          avatar: room.players[currPlayerId].avatar.src,
+        },
+      };
+      break;
+
+    case GamePhase.TURN_STARTING:
+      gameDetail.canvas = game.canvas;
+      gameDetail.currentTurn = {
+        ...gameDetail.currentTurn,
+        currentTurnPlayerId: currPlayerId,
+        selectedWord: game.currentTurn?.selectedWord,
+      };
+      break;
+  }
+
+  return gameDetail;
 };

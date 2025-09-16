@@ -1,10 +1,10 @@
 import { ROUND_START_TIME } from "../../constants";
 import { io } from "../..";
 import { playerToSocket, rooms, roomTimers } from "../../store";
-import { MessageTypes } from "../../types";
+import { GamePhase, MessageTypes } from "../../types";
 import { getCurrentPlayerId } from "../../utils";
-import { changeTurn } from "../helper/changeTurn";
 import { handleTurnTimeout } from "../helper/handleTurnTimeout";
+import { startRoomTimer } from "../helper/timmer";
 
 export function handleWordSelected(
   roomId: string,
@@ -19,11 +19,9 @@ export function handleWordSelected(
     ? playerToSocket[currentPlayerId]
     : undefined;
 
-  if (
-    socketId !== currentSocketId &&
-    !currentPlayerId &&
-    room.players[currentPlayerId!]
-  ) {
+  const currPlayer = room.players[currentPlayerId!];
+
+  if (socketId !== currentSocketId && !currentPlayerId && currPlayer) {
     console.log(`❌ Blocked invalid word selection by ${socketId}`);
     return;
   }
@@ -38,13 +36,15 @@ export function handleWordSelected(
   room.game.currentTurn.selectedWord = word;
   room.game.currentTurn.startAt = Date.now();
 
+  room.game.phase = GamePhase.TURN_STARTING;
   io.to(roomId).emit("game:round-started", {
     currentSelectedWord: word,
     duration: durationSec,
     startAt: Date.now(),
+    gamePhase: room.game.phase,
   });
 
-  const playerName = room.players[currentPlayerId!].name;
+  const playerName = currPlayer.name;
   io.to(roomId).emit("chat:message", {
     message: `${playerName} start drawing!`,
     sender: "system",
@@ -53,10 +53,16 @@ export function handleWordSelected(
   });
 
   // turn timer
-  if (roomTimers[roomId]) clearTimeout(roomTimers[roomId]);
-  roomTimers[roomId] = setTimeout(() => {
+  if (roomTimers[roomId]) {
+    clearTimeout(roomTimers[roomId].timeoutId);
+    delete roomTimers[roomId];
+  }
+
+  const timerDuration = durationSec * 1000;
+
+  startRoomTimer(roomId, timerDuration, () => {
     handleTurnTimeout(roomId);
-  }, durationSec * 1000);
+  });
 }
 
 export function announceRound(
@@ -64,12 +70,20 @@ export function announceRound(
   round: number,
   callback: () => void
 ) {
+  const room = rooms[roomId];
+  if (!room || !room.game) return;
+
+  room.game.phase = GamePhase.ROUND_ANNOUNCEMENT;
+
   io.to(roomId).emit("game:round-change", {
     message: `Round ${round}`,
     duration: ROUND_START_TIME,
     round: round,
+    gamePhase: room.game.phase,
   });
 
   // after delay, continue with turn
-  setTimeout(callback, ROUND_START_TIME * 1000);
+  startRoomTimer(roomId, ROUND_START_TIME * 1000, () => {
+    callback();
+  });
 }

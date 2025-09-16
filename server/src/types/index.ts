@@ -67,6 +67,7 @@ export interface GameState {
   wordsCollection: string[]; // pool for this game
   currentTurn?: TurnState;
   score: Map<string, number>;
+  phase: GamePhase;
 }
 
 // Room (lobby + game container)
@@ -83,6 +84,43 @@ export interface Room {
 export interface SocketType
   extends Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any> {}
 
+export interface Scores {
+  playerId: string;
+  playerName: string;
+  roundScore: number;
+  roundRank: number;
+  totalScore: number;
+  totalRank: number;
+}
+
+export interface FinalPlayerScore
+  extends Omit<Player, "isHost" | "isPlayerTurn"> {}
+
+export interface JoinGame {
+  gamePhase: GamePhase;
+  canvas?: CanvasPath[];
+  roundNumber: number;
+  currentTurn?: {
+    wordsList?: string[];
+    selectedWord?: string;
+    currentTurnPlayerId?: string;
+    timmer?: number;
+    message?: {
+      text: string;
+      avatar?: string;
+    };
+  };
+}
+
+export interface RoomTimer {
+  timeoutId: NodeJS.Timeout;
+  startTime: number;
+  duration: number;
+  timerFor?: string;
+}
+
+// --------------- ENUMS ---------------------
+
 export enum MessageTypes {
   SYSTEM = "system",
   DEFAULT = "message",
@@ -97,14 +135,12 @@ export enum MessageTypes {
   ALERT = "alert",
 }
 
-export interface Scores {
-  playerId: string;
-  playerName: string;
-  roundScore: number;
-  roundRank: number;
-  totalScore: number;
-  totalRank: number;
+export enum GamePhase {
+  GAME_START = "GAME_START",
+  ROUND_ANNOUNCEMENT = "ROUND_ANNOUNCEMENT",
+  WORD_SELECTION = "WORD_SELECTION",
+  TURN_STARTING = "TURN_STARTING",
+  TURN_END = "TURN_END",
+  TURN_SCORE = "TURN_SCORE",
+  GAME_END = "GAME_END",
 }
-
-export interface FinalPlayerScore
-  extends Omit<Player, "isHost" | "isPlayerTurn"> {}

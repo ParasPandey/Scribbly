@@ -17,7 +17,7 @@ export function resetRoomData(roomId: string) {
 
   // --- Cleanup timers for this room ---
   if (roomTimers[roomId]) {
-    clearTimeout(roomTimers[roomId]);
+    clearTimeout(roomTimers[roomId].timeoutId);
     delete roomTimers[roomId];
   }
 }

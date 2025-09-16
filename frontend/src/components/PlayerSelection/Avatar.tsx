@@ -33,7 +33,7 @@ export function Avatar() {
     setIsRolling(true);
 
     let counter = 0;
-    const maxIterations = 15; // how many "flashes"
+    const maxIterations = 15;
     const interval = setInterval(() => {
       const randomIndex = Math.floor(Math.random() * avatars.length);
       dispatch(setAvatar(avatars[randomIndex]));

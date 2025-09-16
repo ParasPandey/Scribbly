@@ -9,12 +9,13 @@ import {
   updateCurrRoundNumber,
   updateGameStarted,
   updateFinalScores,
+  updateIsLoading,
 } from "@/store/gameSlice";
 import { useRouter } from "next/navigation";
 import { FinalPlayerScore, Player } from "@/types/Player";
 import { GameState } from "@/enums";
 import { useSocket } from "@/context/socketContext";
-import { InGameSettings, Scores } from "@/types/Game";
+import { InGameSettings, JoinGame, Scores } from "@/types/Game";
 import { setHost } from "@/store/userSlice";
 import { toast } from "react-toastify";
 import { CanvasPath } from "react-sketch-canvas";
@@ -43,7 +44,7 @@ export const useSocketListeners = () => {
   const { players } = useAppSelector((state) => state.players);
 
   useEffect(() => {
-    const handleRoomCreated = ({
+    const handleRoomCreated = async ({
       success,
       roomId,
       host,
@@ -56,7 +57,8 @@ export const useSocketListeners = () => {
         dispatch(updateRoomId(roomId));
         dispatch(updateGameState(GameState.ROOM_CREATION));
         dispatch(setHost(host));
-        router.push(`/${roomId}`);
+        await router.push(`/${roomId}`);
+        dispatch(updateIsLoading(false));
       }
     };
 
@@ -129,13 +131,16 @@ export const useSocketListeners = () => {
       words,
       duration,
       message,
+      gamePhase,
     }: {
       playerId: string;
       isMyTurn: boolean;
       words: string[];
       duration: number;
       message: RoundMessage | undefined;
+      gamePhase: GameState;
     }) => {
+      dispatch(updateGameState(gamePhase));
       dispatch(setCurrentPlayerId(playerId));
       dispatch(setIsMyTurn(isMyTurn));
       dispatch(setWordsList(words));
@@ -146,10 +151,13 @@ export const useSocketListeners = () => {
     const handleRoundStarted = ({
       currentSelectedWord,
       duration,
+      gamePhase,
     }: {
       currentSelectedWord: string;
       duration: number;
+      gamePhase: GameState;
     }) => {
+      dispatch(updateGameState(gamePhase));
       dispatch(
         startRound({ selectedWord: currentSelectedWord, timmer: duration })
       );
@@ -165,11 +173,14 @@ export const useSocketListeners = () => {
       message,
       duration,
       round,
+      gamePhase,
     }: {
       message: string;
       duration: number;
       round: number;
+      gamePhase: GameState;
     }) => {
+      dispatch(updateGameState(gamePhase));
       dispatch(setTimmer(duration));
       dispatch(setRoundMessage({ text: message, avatar: "" }));
       dispatch(updateCurrRoundNumber(round));
@@ -211,7 +222,7 @@ export const useSocketListeners = () => {
     };
 
     const handleGameEnd = (finalScores: FinalPlayerScore[]) => {
-      dispatch(updateGameState(GameState.COMPLETED));
+      dispatch(updateGameState(GameState.GAME_END));
       dispatch(updateFinalScores(finalScores));
 
       // reset other things which we don't need
@@ -221,6 +232,49 @@ export const useSocketListeners = () => {
       dispatch(resetAll());
     };
 
+    const handleJoinGame = (game: JoinGame) => {
+      const { canvas, currentTurn, roundNumber, gamePhase } = game;
+
+      // ✅ Base updates (common for all phases)
+      dispatch(updateGameState(gamePhase));
+      dispatch(updateGameStarted(true));
+      dispatch(updateCurrRoundNumber(roundNumber));
+      dispatch(setTimmer(currentTurn?.timmer ?? 0));
+
+      if (!currentTurn) return;
+
+      switch (gamePhase) {
+        case GameState.ROUND_ANNOUNCEMENT:
+          dispatch(setRoundMessage({ text: currentTurn.message?.text ?? "" }));
+          break;
+
+        case GameState.WORD_SELECTION:
+          dispatch(setRoundMessage(currentTurn.message));
+          if (currentTurn.currentTurnPlayerId) {
+            dispatch(setCurrentPlayerId(currentTurn.currentTurnPlayerId));
+          }
+          break;
+
+        case GameState.TURN_STARTING:
+          if (canvas) {
+            dispatch(setCanvasPaths(canvas));
+          }
+          if (currentTurn.currentTurnPlayerId) {
+            dispatch(setCurrentPlayerId(currentTurn.currentTurnPlayerId));
+          }
+          dispatch(
+            startRound({
+              selectedWord: currentTurn.selectedWord ?? "",
+              timmer: currentTurn.timmer ?? 0,
+            })
+          );
+          break;
+
+        default:
+          console.warn("Unhandled game phase:", gamePhase);
+      }
+    };
+
     socket.on("room-created", handleRoomCreated);
     socket.on("player-joined", handleRoomJoined);
     socket.on("room-players", handleRoomPlayerUpdate);
@@ -228,6 +282,7 @@ export const useSocketListeners = () => {
     socket.on("game-settings", handleGameSettingsUpdate);
     socket.on("room-error", handleRoomError);
     socket.on("game:start", handleRoomStart);
+    socket.on("game:join", handleJoinGame);
     socket.on("canvas:paths", handleSetCanvaPaths);
     socket.on("canvas:addPath", handleAddCanvaPaths);
     socket.on("canvas:clear", handleClearCanvaPaths);
@@ -247,6 +302,7 @@ export const useSocketListeners = () => {
       socket.off("game-settings", handleGameSettingsUpdate);
       socket.off("room-error", handleRoomError);
       socket.off("game:start", handleRoomStart);
+      socket.off("game:join", handleJoinGame);
       socket.off("canvas:paths", handleSetCanvaPaths);
       socket.off("canvas:addPath", handleAddCanvaPaths);
       socket.off("canvas:clear", handleClearCanvaPaths);

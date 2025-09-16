@@ -3,7 +3,7 @@ import AccessAlarmIcon from "@mui/icons-material/AccessAlarm";
 import { useEffect, useRef, useState } from "react";
 
 export function Watch() {
-  const { timmer } = useAppSelector((state) => state.round);
+  const { timmer, isRoundStarted } = useAppSelector((state) => state.round);
 
   const { isGameStarted } = useAppSelector((state) => state.game);
 
@@ -34,7 +34,7 @@ export function Watch() {
         timerRef.current = null;
       }
     };
-  }, [isGameStarted, timmer]);
+  }, [isGameStarted, timmer, isRoundStarted]);
 
   return (
     <div className="clock flex items-center gap-1">

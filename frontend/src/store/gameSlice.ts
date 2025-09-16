@@ -12,6 +12,7 @@ interface GameStore {
   currentRoundNumber: number;
   isGameStarted: boolean;
   finalScores?: FinalPlayerScore[];
+  isLoading: boolean;
 }
 
 const initialState: GameStore = {
@@ -28,6 +29,7 @@ const initialState: GameStore = {
   isMyTurn: false,
   currentRoundNumber: 1,
   isGameStarted: false,
+  isLoading: false,
 };
 
 const gameSlice = createSlice({
@@ -80,6 +82,9 @@ const gameSlice = createSlice({
     updateFinalScores: (state, action: PayloadAction<FinalPlayerScore[]>) => {
       state.finalScores = action.payload;
     },
+    updateIsLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(resetAll, (state) => {
@@ -111,5 +116,6 @@ export const {
   updateCurrRoundNumber,
   updateGameStarted,
   updateFinalScores,
+  updateIsLoading,
 } = gameSlice.actions;
 export default gameSlice.reducer;

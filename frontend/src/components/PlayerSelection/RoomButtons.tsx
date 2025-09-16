@@ -1,17 +1,19 @@
 "use client";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Player } from "@/types/Player";
 import Button from "@mui/material/Button";
 import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import EnterRoomIdPopup from "./EnterRoomIdPopup";
 import { useSocket } from "@/context/socketContext";
+import { updateIsLoading } from "@/store/gameSlice";
 
 const RoomButtons = () => {
   const { name, selectedAvatar, uuid } = useAppSelector((state) => state.user);
   const { roomId } = useParams();
   const [showPopup, setShowPopup] = useState(false);
   const socket = useSocket();
+  const dispatch = useAppDispatch();
 
   const PlayHandler = (roomId: string) => {
     // Handle play button click
@@ -24,6 +26,7 @@ const RoomButtons = () => {
       setShowPopup(true);
       return;
     }
+
     // check url if it has roomId then join the room
     const player: Player = {
       id: uuid,
@@ -43,6 +46,7 @@ const RoomButtons = () => {
       alert("Please enter your name before creating a room.");
       return;
     }
+    dispatch(updateIsLoading(true));
     const player: Player = {
       name,
       avatar: selectedAvatar,

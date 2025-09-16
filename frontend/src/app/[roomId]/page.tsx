@@ -25,7 +25,7 @@ export default function Game() {
 
   function renderContent() {
     // if GameEnds
-    if (gameState === GameState.COMPLETED && finalScores) {
+    if (gameState === GameState.GAME_END && finalScores) {
       return <FinalScoreboard finalScores={finalScores} />;
     }
     if (gameState === GameState.ROOM_CREATION) {
@@ -33,20 +33,15 @@ export default function Game() {
       return <GameSettings />;
     }
     // show new round start message
-    if (round.isRoundChange && round.message) {
+    if (gameState === GameState.ROUND_ANNOUNCEMENT && round.message) {
       return <GameMessageHelper isShowAvatar={false} message={round.message} />;
     }
     // show words to choose for current turn player
-    if (isMyTurn && !round.isRoundStarted) {
+    if (isMyTurn && gameState === GameState.WORD_SELECTION) {
       return <WordChossing />;
     }
     // show player is chossing word ot other players
-    if (
-      !isMyTurn &&
-      !round.isRoundStarted &&
-      round.message &&
-      !round.shouldDisplayScores
-    ) {
+    if (!isMyTurn && gameState === GameState.WORD_SELECTION && round.message) {
       return <GameMessageHelper isShowAvatar={true} message={round.message} />;
     }
 

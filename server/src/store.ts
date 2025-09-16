@@ -1,4 +1,4 @@
-import { Room } from "./types";
+import { Room, RoomTimer } from "./types";
 
 // In-memory state
 export const rooms: Record<string, Room> = {};
@@ -7,4 +7,4 @@ export const socketToPlayer: Record<
   { roomId: string; playerId: string }
 > = {};
 export const playerToSocket: Record<string, string> = {};
-export const roomTimers: Record<string, NodeJS.Timeout> = {};
+export const roomTimers: Record<string, RoomTimer> = {};

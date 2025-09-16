@@ -24,10 +24,6 @@ export function RoomEvents(socket: SocketType) {
       console.log("Join Room with Id: ", roomId);
 
       joinRoom(room, roomId, player, socket.id);
-      // send existing canvas if a game is running
-      if (room.game && room.game.canvas.length) {
-        socket.emit("canvas:paths", room.game.canvas);
-      }
     }
   );
 }

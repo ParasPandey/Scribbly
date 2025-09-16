@@ -1,8 +1,10 @@
-import { WORD_GUESSING_TIME } from "../../constants";
+import { WORD_SELECTION_TIME } from "../../constants";
 import { io } from "../..";
 import { playerToSocket, rooms, roomTimers } from "../../store";
 import { getRandomWords } from "../../utils";
 import { handleWordSelected } from "../GameEvents/GameEventHandlers";
+import { startRoomTimer } from "./timmer";
+import { GamePhase } from "../../types";
 
 export function startTurn(roomId: string) {
   const room = rooms[roomId];
@@ -10,7 +12,8 @@ export function startTurn(roomId: string) {
 
   // clear previous timer if exists
   if (roomTimers[roomId]) {
-    clearTimeout(roomTimers[roomId]);
+    clearTimeout(roomTimers[roomId].timeoutId);
+    delete roomTimers[roomId];
   }
 
   // reset everyone first
@@ -33,14 +36,16 @@ export function startTurn(roomId: string) {
         room.game.turnOrder[room.game.currentTurnIndex];
     }
 
+    room.game.phase = GamePhase.WORD_SELECTION;
     // emit change turn event
     io.to(currentSocketId).emit("turn:change-turn", {
       playerId: room.game?.currentTurn?.currentPlayerId,
       isMyTurn: true,
       currentRound: room.game?.roundNumber,
       words: words,
-      duration: WORD_GUESSING_TIME,
+      duration: WORD_SELECTION_TIME,
       message: null,
+      gamePhase: room.game.phase,
     });
 
     // notify all others
@@ -54,7 +59,8 @@ export function startTurn(roomId: string) {
             isMyTurn: false,
             currentRound: room.game?.roundNumber,
             words: [],
-            duration: WORD_GUESSING_TIME,
+            duration: WORD_SELECTION_TIME,
+            gamePhase: room.game?.phase,
             message: {
               text: `${room.players[currentPlayerId].name} is choosing a word!!`,
               avatar: room.players[currentPlayerId].avatar.src,
@@ -65,14 +71,12 @@ export function startTurn(roomId: string) {
     });
 
     // 🔹 safety fallback: auto-pick random after 10s if no selection
-    roomTimers[roomId] = setTimeout(() => {
+    startRoomTimer(roomId, WORD_SELECTION_TIME * 1000, () => {
       if (!room.game?.currentTurn?.selectedWord) {
         const randomWord = words[Math.floor(Math.random() * words.length)];
-        console.log(`⚡ Auto-picked word: ${randomWord}`);
-
         // 🔹 Call server-side handler directly
         handleWordSelected(roomId, currentSocketId, randomWord);
       }
-    }, WORD_GUESSING_TIME * 1000);
+    });
   }
 }
