@@ -58,7 +58,6 @@ export const useSocketListeners = () => {
         dispatch(updateGameState(GameState.ROOM_CREATION));
         dispatch(setHost(host));
         await router.push(`/${roomId}`);
-        dispatch(updateIsLoading(false));
       }
     };
 

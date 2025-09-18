@@ -38,7 +38,6 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => {
       window.removeEventListener("popstate", handlePopState);
     };
   }, []);
-
   return (
     <>
       <div className="min-h-screen bg-[url('/bck1.png')] bg-cover bg-center flex justify-center">

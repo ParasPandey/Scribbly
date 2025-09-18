@@ -17,46 +17,57 @@ const RoomButtons = () => {
 
   const PlayHandler = (roomId: string) => {
     // Handle play button click
-    if (!name) {
-      alert("Please enter your name before creating a room.");
-      return;
-    }
+    try {
+      if (!name) {
+        alert("Please enter your name before creating a room.");
+        return;
+      }
 
-    if (!roomId || roomId === "undefined") {
-      setShowPopup(true);
-      return;
-    }
+      if (!roomId || roomId === "undefined") {
+        setShowPopup(true);
+        return;
+      }
 
-    // check url if it has roomId then join the room
-    const player: Player = {
-      id: uuid,
-      name,
-      avatar: selectedAvatar,
-      isHost: false,
-      rank: 1,
-      score: 0,
-      isPlayerTurn: false,
-    };
-    socket.emit("join-room", { roomId, player });
+      dispatch(updateIsLoading(true));
+      // check url if it has roomId then join the room
+      const player: Player = {
+        id: uuid,
+        name,
+        avatar: selectedAvatar,
+        isHost: false,
+        rank: 1,
+        score: 0,
+        isPlayerTurn: false,
+      };
+      socket.emit("join-room", { roomId, player });
+    } catch (e) {
+      dispatch(updateIsLoading(false));
+      console.error("Something went wrong..", e);
+    }
   };
 
   const CreatePrivateRoomHandler = () => {
-    // Handle play button click
-    if (!name) {
-      alert("Please enter your name before creating a room.");
-      return;
+    try {
+      // Handle play button click
+      if (!name) {
+        alert("Please enter your name before creating a room.");
+        return;
+      }
+      dispatch(updateIsLoading(true));
+      const player: Player = {
+        name,
+        avatar: selectedAvatar,
+        id: uuid,
+        isHost: true,
+        rank: 1,
+        score: 0,
+        isPlayerTurn: false,
+      };
+      socket.emit("create-private-room", player);
+    } catch (e) {
+      dispatch(updateIsLoading(false));
+      console.error("Something went wrong..", e);
     }
-    dispatch(updateIsLoading(true));
-    const player: Player = {
-      name,
-      avatar: selectedAvatar,
-      id: uuid,
-      isHost: true,
-      rank: 1,
-      score: 0,
-      isPlayerTurn: false,
-    };
-    socket.emit("create-private-room", player);
   };
 
   const OnPopupClose = () => {

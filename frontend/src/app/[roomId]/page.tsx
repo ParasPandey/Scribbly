@@ -4,7 +4,7 @@ import { Gamebar } from "@/components/Gamebar";
 import { PlayerPanel } from "@/components/PlayerPanel";
 import { ChatRoom } from "@/components/ChatRoom";
 import { GameSettings } from "@/components/GameSettings";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { GameState } from "@/enums";
 import { PlayerSelection } from "@/components/PlayerSelection";
 import { Canva } from "@/components/Canva";
@@ -12,11 +12,22 @@ import WordChossing from "@/components/WordChossing";
 import { GameMessageHelper } from "@/components/GameMessageHelper";
 import { EachTurnScore } from "@/components/EachTurnScore";
 import FinalScoreboard from "@/components/FinalScoreboard";
+import { useEffect } from "react";
+import { updateIsLoading } from "@/store/gameSlice";
 
 export default function Game() {
-  const { gameState, isMyTurn, finalScores } = useAppSelector(
+  const { gameState, isMyTurn, finalScores, isLoading } = useAppSelector(
     (state) => state.game
   );
+
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (isLoading) {
+      dispatch(updateIsLoading(false));
+    }
+  }, [dispatch, isLoading]);
+
   const round = useAppSelector((state) => state.round);
 
   if (gameState === GameState.USER_REGISTERING) {
