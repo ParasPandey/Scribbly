@@ -13,8 +13,11 @@ export interface Player {
   avatar: AvatarType;
   isHost: boolean;
   score: number;
+  rank: number;
   isPlayerTurn: boolean;
 }
+
+export type PlayerCreation = Omit<Player, "score" | "isPlayerTurn" | "rank">;
 
 // Chat
 export interface ChatMessage {

@@ -4,14 +4,18 @@ import {
   JoinGame,
   MessageTypes,
   Player,
+  PlayerCreation,
   Room,
 } from "../../types";
 import { playerToSocket, rooms, socketToPlayer } from "../../store";
 import { io } from "../..";
 import { getRemainingTime } from "../helper/timmer";
+import { Socket } from "socket.io";
+import { buildGameDetail } from "../helper/buildGameDetail";
+import { getNewPlayerRank } from "../helper/getNewPlayerRank";
 
 export const createRoom = (
-  player: Player,
+  player: PlayerCreation,
   roomId: string,
   socketId: string
 ) => {
@@ -24,14 +28,20 @@ export const createRoom = (
     customWords: [],
   };
 
+  const actualPlayer: Player = {
+    ...player,
+    score: 0,
+    rank: 1,
+    isPlayerTurn: false,
+  };
+
   rooms[roomId] = {
     id: roomId,
-    owner: player,
-    players: { [player.id]: { ...player, isPlayerTurn: false } },
+    owner: actualPlayer,
+    players: { [actualPlayer.id]: { ...actualPlayer, isPlayerTurn: false } },
     chat: [],
     gameSetting: defaultSettings,
     isGameStarted: false,
-    // game: undefined
   };
 
   socketToPlayer[socketId] = { roomId, playerId: player.id };
@@ -66,13 +76,26 @@ export const createRoom = (
 export const joinRoom = (
   room: Room,
   roomId: string,
-  player: Player,
-  socketId: string
+  player: PlayerCreation,
+  socketId: string,
+  socket: Socket
 ) => {
-  room.players[player.id] = { ...player, isPlayerTurn: false };
-  socketToPlayer[socketId] = { roomId, playerId: player.id };
-  playerToSocket[player.id] = socketId;
+  const isGameAlreadyStarted = !!(room.isGameStarted && room.game);
 
+  // Create actual player
+  const actualPlayer: Player = {
+    ...player,
+    score: 0,
+    rank: 1,
+    isPlayerTurn: false,
+  };
+
+  // Track player <-> socket mapping
+  room.players[actualPlayer.id] = actualPlayer;
+  socketToPlayer[socketId] = { roomId, playerId: actualPlayer.id };
+  playerToSocket[actualPlayer.id] = socketId;
+
+  // Notify player joined
   io.to(socketId).emit("player-joined", {
     success: true,
     roomId,
@@ -80,76 +103,35 @@ export const joinRoom = (
     time: Date.now(),
   });
 
-  io.to(roomId).emit("room-players", {
-    players: room.players,
+  //  Assign correct rank
+  room.players[actualPlayer.id].rank = getNewPlayerRank(room);
+
+  //  Broadcast updates
+  socket.to(roomId).emit("player-added", {
+    player: room.players[actualPlayer.id],
   });
+  io.to(socketId).emit("room-players", { players: room.players });
+
+  //  Add chat system message
   const chatMessage = {
-    message: `${player.name} joined the room`,
+    message: `${actualPlayer.name} joined the room`,
     sender: "system",
     messageType: MessageTypes.ROOM_JOIN,
     timestamp: Date.now(),
   };
   room.chat.push(chatMessage);
-
   io.to(roomId).emit("chat:message", chatMessage);
 
   // if game already started
-  if (room.isGameStarted && room.game) {
+  if (isGameAlreadyStarted && room.game) {
     // add player id to turnOrder and send all the data for current round and start the game
-    room.game.turnOrder = [...room.game.turnOrder, player.id];
+    room.game.turnOrder = [...room.game.turnOrder, actualPlayer.id];
 
     const gameDetail: JoinGame = buildGameDetail(room);
-
     io.to(socketId).emit("game:join", gameDetail);
-  } else
+  } else {
     io.to(roomId).emit("game-settings", {
       gameSetting: room.gameSetting,
     });
-};
-
-const buildGameDetail = (room: Room): JoinGame => {
-  const { game } = room;
-  if (!game) throw new Error("Game not started");
-
-  const gamePhase = game.phase;
-  const currPlayerId: string = room.game?.currentTurn
-    ?.currentPlayerId as string;
-
-  const gameDetail: JoinGame = {
-    gamePhase,
-    roundNumber: game.roundNumber,
-    currentTurn: {
-      timmer: getRemainingTime(room.id),
-    },
-  };
-
-  switch (gamePhase) {
-    case GamePhase.ROUND_ANNOUNCEMENT:
-      gameDetail.currentTurn!.message = {
-        text: `Round ${game.roundNumber}`,
-      };
-      break;
-
-    case GamePhase.WORD_SELECTION:
-      gameDetail.currentTurn = {
-        ...gameDetail.currentTurn,
-        currentTurnPlayerId: currPlayerId,
-        message: {
-          text: `${room.players[currPlayerId].name} is choosing a word!!`,
-          avatar: room.players[currPlayerId].avatar.src,
-        },
-      };
-      break;
-
-    case GamePhase.TURN_STARTING:
-      gameDetail.canvas = game.canvas;
-      gameDetail.currentTurn = {
-        ...gameDetail.currentTurn,
-        currentTurnPlayerId: currPlayerId,
-        selectedWord: game.currentTurn?.selectedWord,
-      };
-      break;
   }
-
-  return gameDetail;
 };

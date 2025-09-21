@@ -44,10 +44,22 @@ const playersSlice = createSlice({
     },
 
     removePlayer(state, action: PayloadAction<string>) {
-      delete state.players[action.payload];
+      const playerId = action.payload;
+      const removedPlayer = state.players[playerId];
+      if (!removedPlayer) return;
+
+      // Remove the player
+      delete state.players[playerId];
     },
     setMyTurn(state, action: PayloadAction<boolean>) {
       state.isMyTurn = action.payload;
+    },
+
+    rankSync(state, action: PayloadAction<Record<string, number>>) {
+      const players = Object.keys(action.payload); // array of player IDs
+      for (const playerId of players) {
+        state.players[playerId].rank = action.payload[playerId]; // assign the rank value
+      }
     },
   },
   extraReducers: (builder) => {
@@ -63,5 +75,6 @@ export const {
   updatePlayer,
   removePlayer,
   updatePlayerScores,
+  rankSync,
 } = playersSlice.actions;
 export default playersSlice.reducer;

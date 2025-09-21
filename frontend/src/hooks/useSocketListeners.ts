@@ -33,7 +33,13 @@ import {
   updateRoundScores,
 } from "@/store/roundSlice";
 import { RoundMessage, RoundScores } from "@/types/Round";
-import { setPlayers, updatePlayerScores } from "@/store/playerSlice";
+import {
+  addPlayer,
+  rankSync,
+  removePlayer,
+  setPlayers,
+  updatePlayerScores,
+} from "@/store/playerSlice";
 import { getNameFromPlayerId } from "@/utils/getNameFromPlayerId";
 import { resetAll } from "@/store/rootActions";
 
@@ -75,6 +81,14 @@ export const useSocketListeners = () => {
       }
     };
 
+    const handlePlayerAdded = ({ player }: { player: Player }) => {
+      dispatch(addPlayer(player));
+    };
+
+    const handlePlayerLeft = ({ playerId }: { playerId: string }) => {
+      dispatch(removePlayer(playerId));
+    };
+
     const handleRoomPlayerUpdate = ({
       players,
     }: {
@@ -102,6 +116,7 @@ export const useSocketListeners = () => {
     };
 
     const handleRoomError = (error: { message: string }) => {
+      dispatch(updateIsLoading(false));
       console.error("Room error:", error.message);
       // Optionally, you can show an error message to the user
       toast.error(`${error.message}`);
@@ -274,8 +289,18 @@ export const useSocketListeners = () => {
       }
     };
 
+    const handleRankSyncing = ({
+      ranks,
+    }: {
+      ranks: Record<string, number>;
+    }) => {
+      dispatch(rankSync(ranks));
+    };
+
     socket.on("room-created", handleRoomCreated);
     socket.on("player-joined", handleRoomJoined);
+    socket.on("player-added", handlePlayerAdded);
+    socket.on("player-left", handlePlayerLeft);
     socket.on("room-players", handleRoomPlayerUpdate);
     socket.on("chat:message", handleRoomChatUpdate);
     socket.on("game-settings", handleGameSettingsUpdate);
@@ -292,10 +317,13 @@ export const useSocketListeners = () => {
     socket.on("game:score", handleGameScore);
     socket.on("game:ended", handleGameEnd);
     socket.on("game:reset", handleGameReset);
+    socket.on("game:sync-rank", handleRankSyncing);
 
     return () => {
       socket.off("room-created", handleRoomCreated);
       socket.off("player-joined", handleRoomJoined);
+      socket.off("player-added", handlePlayerAdded);
+      socket.off("player-left", handlePlayerLeft);
       socket.off("room-players", handleRoomPlayerUpdate);
       socket.off("chat:message", handleRoomChatUpdate);
       socket.off("game-settings", handleGameSettingsUpdate);
@@ -312,6 +340,7 @@ export const useSocketListeners = () => {
       socket.off("game:score", handleGameScore);
       socket.off("game:ended", handleGameEnd);
       socket.off("game:reset", handleGameReset);
+      socket.off("game:sync-rank", handleRankSyncing);
     };
   }, [dispatch, router, players]);
 };

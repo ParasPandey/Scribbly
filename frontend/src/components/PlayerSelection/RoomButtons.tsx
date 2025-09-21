@@ -1,6 +1,6 @@
 "use client";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { Player } from "@/types/Player";
+import { Player, PlayerCreation } from "@/types/Player";
 import Button from "@mui/material/Button";
 import React, { useState } from "react";
 import { useParams } from "next/navigation";
@@ -54,14 +54,11 @@ const RoomButtons = () => {
         return;
       }
       dispatch(updateIsLoading(true));
-      const player: Player = {
+      const player: PlayerCreation = {
         name,
         avatar: selectedAvatar,
         id: uuid,
         isHost: true,
-        rank: 1,
-        score: 0,
-        isPlayerTurn: false,
       };
       socket.emit("create-private-room", player);
     } catch (e) {

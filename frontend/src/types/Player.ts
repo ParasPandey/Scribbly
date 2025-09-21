@@ -10,3 +10,5 @@ export interface Player {
   isPlayerTurn: boolean;
 }
 export type FinalPlayerScore = Omit<Player, "isHost" | "isPlayerTurn">;
+
+export type PlayerCreation = Omit<Player, "rank" | "score" | "isPlayerTurn">;

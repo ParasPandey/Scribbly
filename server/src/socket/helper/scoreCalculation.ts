@@ -27,6 +27,11 @@ export function calculateScore(roomId: string): {
 
     const totalRanks = assignDenseRanks(totalSorted);
 
+    // Update player ranks in room
+    for (const [id, rank] of Object.entries(totalRanks)) {
+      room.players[id].rank = rank;
+    }
+
     return {
       scores: Object.values(room.players).map((p) => ({
         playerId: p.id,
@@ -75,15 +80,10 @@ export function calculateScore(roomId: string): {
     .sort((a, b) => b.score - a.score);
   const roundRanks = assignDenseRanks(roundSorted);
 
-  const totalSorted = Object.values(room.players)
-    .map((p) => ({ id: p.id, score: p.score }))
-    .sort((a, b) => b.score - a.score);
-  const totalRanks = assignDenseRanks(totalSorted);
+  const totalRanks = getFinalRanks(roomId); // ✅ also updates player.rank
 
-  // ✅ Did everyone guess? (excluding drawer)
   const isEveryPlayerGuessed = guesses.length === totalPlayers - 1;
 
-  // --- Final payload ---
   return {
     scores: Object.values(room.players).map((p) => ({
       playerId: p.id,
@@ -95,4 +95,26 @@ export function calculateScore(roomId: string): {
     })),
     isEveryPlayerGuessed,
   };
+}
+
+/**
+ * Returns dense ranking of players in a room based on total scores
+ * and also updates `room.players[id].rank`.
+ */
+export function getFinalRanks(roomId: string): Record<string, number> {
+  const room = rooms[roomId];
+  if (!room) return {};
+
+  const totalSorted = Object.values(room.players)
+    .map((p) => ({ id: p.id, score: p.score }))
+    .sort((a, b) => b.score - a.score);
+
+  const ranks = assignDenseRanks(totalSorted);
+
+  // ✅ Persist rank into room.players
+  for (const [id, rank] of Object.entries(ranks)) {
+    room.players[id].rank = rank;
+  }
+
+  return ranks;
 }
