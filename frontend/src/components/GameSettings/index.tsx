@@ -40,7 +40,7 @@ export function GameSettings() {
     {
       icon: <AccessAlarmIcon sx={{ width: 30, height: 30 }} />,
       label: "Draw Time",
-      options: [10, 50, 60, 70, 80, 90, 100, 120, 150, 180, 200],
+      options: [50, 60, 70, 80, 90, 100, 120, 150, 180, 200],
       default: gameSettings.drawTime,
       disabled: !isHost,
     },
