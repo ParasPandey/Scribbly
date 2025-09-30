@@ -8,7 +8,7 @@ export function Gamebar() {
   const { currentRoundNumber } = useAppSelector((state) => state.game);
 
   return (
-    <div className="game-bar grid grid-cols-[1fr_minmax(120px,1fr)_1fr] bg-white gap-3 p-1 rounded-md items-center justify-between">
+    <div className="game-bar grid grid-cols-[max-content_1fr_max-content] bg-white gap-3 p-1 rounded-md items-center justify-between">
       <div className="flex items-center gap-8">
         <Watch />
         <div className="round text-xl font-bold">

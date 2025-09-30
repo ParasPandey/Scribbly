@@ -21,7 +21,7 @@ export const createRoom = (
 ) => {
   const defaultSettings: InGameSettings = {
     players: 8,
-    drawTime: 10,
+    drawTime: 50,
     rounds: 3,
     wordCount: 3,
     hints: 2,

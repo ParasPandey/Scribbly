@@ -20,7 +20,7 @@ const initialState: GameStore = {
   gameState: GameState.USER_REGISTERING, // Initial game state
   gameSettings: {
     players: 2,
-    drawTime: 10,
+    drawTime: 50,
     rounds: 3,
     wordCount: 3,
     hints: 2,
